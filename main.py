@@ -22,8 +22,12 @@ def start_game(board_size, first_player):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     x, y = event.pos
-                    print(f"Mouse clicked at position: {x}, {y}")
                     board.highlight_clicked_token(x, y)
+                elif event.button == 3:
+                    x, y = event.pos
+                    row, column = board.get_clicked_tile_position(x, y)
+                    board.move_stack(row, column)
+                    pass
 
         gui.draw_board(board)
         pygame.display.update()
@@ -43,6 +47,5 @@ if __name__ == '__main__':
     while first_player not in ['h', 'H', 'c', 'C']:
         print('Wrong input. Try again!')
         first_player = input('Who is to make the first move [h/c]: ')
-
 
     start_game(board_size, first_player)
