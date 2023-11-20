@@ -1,61 +1,48 @@
 import pygame
-import tkinter as tk
-from tkinter import ttk
-import threading
 from GUI import GUI
-from get_initialized_board import get_initialized_board
+from Board import Board
 
-grid_size = 8
-need_restart = threading.Event()
 
-def run_tkinter():
-    def on_select(event=None):
-        global grid_size
-        new_size = int(combo.get())
-        grid_size = new_size
-        need_restart.set()
+def start_game(board_size, first_player):
+    pygame.init()
+    screen = pygame.display.set_mode((800, 800))
+    pygame.display.set_caption('Byte')
+    running = True
 
-    root = tk.Tk()
-    root.title("Settings")
-    root.geometry('250x50')
+    gui = GUI(screen)
+    tile_size = screen.get_height() // board_size
+    board = Board(board_size, tile_size)
+    board.initialize_board()
 
-    label = tk.Label(root, text="Grid size:")
-    label.grid(column=0, row=0)
+    while running:
 
-    n = tk.StringVar(value=str(grid_size))
-    combo = ttk.Combobox(root, width=15, textvariable=n, values=[4, 6, 8, 10, 12, 14, 16])
-    combo.grid(column=1, row=0)
-    combo.bind("<<ComboboxSelected>>", on_select)
-    root.mainloop()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    x, y = event.pos
+                    print(f"Mouse clicked at position: {x}, {y}")
+                    board.highlight_clicked_token(x, y)
 
-def run_pygame():
-    global grid_size, need_restart
-    while True:
-        pygame.init()
-        screen = pygame.display.set_mode((800, 800))
-        pygame.display.set_caption('Byte')
-
-        gui = GUI(screen, grid_size)
-        board = get_initialized_board(grid_size)
         gui.draw_board(board)
-
         pygame.display.update()
 
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+    pygame.quit()
 
-            if need_restart.is_set():
-                pygame.quit()
-                need_restart.clear()
-                break
 
-        if not tk_thread.is_alive():
-            break
+if __name__ == '__main__':
+    # board_size = int(input('Input board size: '))
+    board_size = 8
+    while board_size % 2 == 1 or board_size < 4 or board_size > 16:
+        print('Wrong input. Try again!')
+        board_size = input('Input board size: ')
 
-tk_thread = threading.Thread(target=run_tkinter, daemon=True)
-tk_thread.start()
+    # first_player = input('Who is to make the first move [h/c]: ')
+    first_player = 'h'
+    while first_player not in ['h', 'H', 'c', 'C']:
+        print('Wrong input. Try again!')
+        first_player = input('Who is to make the first move [h/c]: ')
 
-run_pygame()
+
+    start_game(board_size, first_player)
