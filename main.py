@@ -7,7 +7,11 @@ from utils import get_clicked_tile_position
 def start_game(board_size, first_player):
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
-    pygame.display.set_caption('Byte')
+    if first_player in ['h', 'H']:
+        pygame.display.set_caption('Byte - HUMAN (white) TURN')
+    else:
+        pygame.display.set_caption('Byte - COMPUTER (black) TURN')
+
     running = True
 
     gui = GUI(screen)

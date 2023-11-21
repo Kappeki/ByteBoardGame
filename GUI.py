@@ -1,5 +1,5 @@
 import pygame
-import colors
+import color.colors as colors
 from Board import Board
 from Token import Token
 
@@ -10,6 +10,13 @@ class GUI:
         self.screen = screen
 
     def draw_board(self, board: Board):
+        # Define who's turn it is
+        if board.current_player in ['h', 'H']:
+            pygame.display.set_caption('Byte - HUMAN (white) TURN')
+        else:
+            pygame.display.set_caption('Byte - COMPUTER (black) TURN')
+        
+        # Draw board
         for row in range(board.board_size):
             for column in range(board.board_size):
 

@@ -1,4 +1,4 @@
-import colors
+import color.colors as colors
 
 
 class Token:
