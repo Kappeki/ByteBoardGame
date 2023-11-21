@@ -1,6 +1,7 @@
 import pygame
 from GUI import GUI
 from Board import Board
+from utils import get_clicked_tile_position
 
 
 def start_game(board_size, first_player):
@@ -11,7 +12,7 @@ def start_game(board_size, first_player):
 
     gui = GUI(screen)
     tile_size = screen.get_height() // board_size
-    board = Board(board_size, tile_size)
+    board = Board(board_size, tile_size, first_player)
     board.initialize_board()
 
     while running:
@@ -25,9 +26,9 @@ def start_game(board_size, first_player):
                     board.highlight_clicked_token(x, y)
                 elif event.button == 3:
                     x, y = event.pos
-                    row, column = board.get_clicked_tile_position(x, y)
+                    row, column = get_clicked_tile_position(x, y, board_size, tile_size)
                     board.move_stack(row, column)
-                    pass
+                    
 
         gui.draw_board(board)
         pygame.display.update()

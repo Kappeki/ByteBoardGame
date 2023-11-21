@@ -23,5 +23,10 @@ class Token:
         else:
             self.selected = status
 
+    def move(self, dest_row, dest_column, dest_level):
+        self.row = dest_row
+        self.column = dest_column
+        self.level = dest_level
+
     def __repr__(self):
         return f'id:{self.id};row:{self.row};column:{self.column};level:{self.level}'
