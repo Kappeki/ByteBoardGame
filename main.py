@@ -32,7 +32,6 @@ def start_game(board_size, first_player):
                     x, y = event.pos
                     row, column = get_clicked_tile_position(x, y, board_size, tile_size)
                     board.move_stack(row, column)
-                    
 
         gui.draw_board(board)
         pygame.display.update()
