@@ -20,15 +20,14 @@ class Board:
     def change_selected_tokens_status(self):
         [selected_token.change_selected_status() for selected_token in self.selected_tokens]
 
-
     def initialize_board(self):
         token_width = int(self.tile_size * 0.8)
         token_height = self.tile_size // 8
         self.board = {
             (row, column): [] if row in (0, self.board_size - 1) else [
                 Token(row, column, row % 2, token_width, token_height, 1),
-                Token(row, column, row % 2, token_width, token_height, 2),
-                Token(row, column, row % 2, token_width, token_height, 3),
+                # Token(row, column, row % 2, token_width, token_height, 2),
+                # Token(row, column, row % 2, token_width, token_height, 3),
             ]
             for row in range(self.board_size)
             for column in range(self.board_size)
@@ -44,8 +43,8 @@ class Board:
         for stack in self.board.values():
             for i in range(len(stack)):
                 token = stack[i]
-                token_x = token.column*self.tile_size+tile_padding
-                token_y = (token.row+1)*self.tile_size-token_height*(token.level)
+                token_x = token.column * self.tile_size + tile_padding
+                token_y = (token.row+1) * self.tile_size - token_height * token.level
 
                 token_x_min = token_x
                 token_x_max = token_x + token_width
@@ -69,7 +68,7 @@ class Board:
                     self.change_selected_tokens_status()
 
     def move_stack(self, row, column):
-        # Check if no token was selected
+        # Check if token was selected
         selected_tokens_count = len(self.selected_tokens)
         if selected_tokens_count == 0:
             print(f'{fcolors.WARNING}No token was selected{fcolors.ENDC}')
@@ -94,10 +93,15 @@ class Board:
             return
         
         current_tile_tokens_count = len(self.board[(current_row, current_column)])
-        destination_tile_count = len(self.board[(row, column)])
+        destination_tile_tokens_count = len(self.board[(row, column)])
+
+        # Check if resulting level is higher than the starting level
+        if self.selected_tokens[0].level >= destination_tile_tokens_count + 1:
+            print(f'{fcolors.FAIL}You are attempting to move token to lower or equal level{fcolors.ENDC}')
+            return
         
         # Check if resulting stack would have more than 8 tokens
-        resulting_stack_size = selected_tokens_count + destination_tile_count
+        resulting_stack_size = selected_tokens_count + destination_tile_tokens_count
         if resulting_stack_size > 8:
             print(f'{fcolors.FAIL}You are attempting to make stack of size {resulting_stack_size}{fcolors.ENDC}')
             return
@@ -107,8 +111,8 @@ class Board:
         
         # Update token objects
         for token in self.selected_tokens:
-            token.move(row, column, destination_tile_count + 1)
-            destination_tile_count += 1
+            token.move(row, column, destination_tile_tokens_count + 1)
+            destination_tile_tokens_count += 1
 
         # Update new tile in board dictionary
         self.board[(row, column)] = [*self.board[(row, column)], *self.selected_tokens]
