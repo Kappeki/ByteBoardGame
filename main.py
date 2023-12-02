@@ -31,7 +31,11 @@ def start_game(board_size, first_player):
                 elif event.button == 3:
                     x, y = event.pos
                     row, column = get_clicked_tile_position(x, y, board_size, tile_size)
-                    board.move_stack(row, column)
+                    is_winning_move = board.move_stack(row, column)
+                    if is_winning_move:
+                        print('Human won!') if board.human_points > board.computer_points else print('Computer won!')
+                        print(f'Human: {board.human_points} Computer: {board.computer_points}')
+                        running = False
 
         gui.draw_board(board)
         pygame.display.update()
@@ -42,9 +46,9 @@ def start_game(board_size, first_player):
 if __name__ == '__main__':
     # board_size = int(input('Input board size: '))
     board_size = 8
-    while board_size % 2 == 1 or board_size < 4 or board_size > 16:
+    while board_size not in [8, 10, 16]:
         print('Wrong input. Try again!')
-        board_size = input('Input board size: ')
+        board_size = int(input('Input board size: '))
 
     # first_player = input('Who is to make the first move [h/c]: ')
     first_player = 'h'

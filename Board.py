@@ -16,6 +16,8 @@ class Board:
         self.board_dark = colors.BROWN
         self.selected_tokens: List[Token] = []
         self.current_player = current_player
+        self.human_points = 0
+        self.computer_points = 0
 
     def change_selected_tokens_status(self):
         [selected_token.change_selected_status() for selected_token in self.selected_tokens]
@@ -67,17 +69,20 @@ class Board:
                     self.selected_tokens = [stack[j] for j in range(i, len(stack))]
                     self.change_selected_tokens_status()
 
-    def move_stack(self, row, column):
+    def move_stack(self, row, column) -> bool:
+
+        is_winning_move = False
+
         # Check if token was selected
         selected_tokens_count = len(self.selected_tokens)
         if selected_tokens_count == 0:
             print(f'{fcolors.WARNING}No token was selected{fcolors.ENDC}')
-            return
+            return is_winning_move
 
         # Check if row, column are playable tiles
         if (row, column) not in self.playable_tiles:
             print(f'{fcolors.FAIL}Tile is not playable{fcolors.ENDC}')
-            return
+            return is_winning_move
         
         current_row = self.selected_tokens[0].row
         current_column = self.selected_tokens[0].column
@@ -85,12 +90,12 @@ class Board:
         # Check if destination tile is the same as current tile
         if row == current_row and column == current_column:
             print(f'{fcolors.WARNING}Source and destination tiles are same{fcolors.ENDC}')
-            return
+            return is_winning_move
         
         # Check if tiles are in neighbourhood
         if not are_neighbours((current_row, current_column), (row, column)):
             print(f'{fcolors.FAIL}Destination tile is too far away{fcolors.ENDC}')
-            return
+            return is_winning_move
         
         current_tile_tokens_count = len(self.board[(current_row, current_column)])
         destination_tile_tokens_count = len(self.board[(row, column)])
@@ -98,13 +103,13 @@ class Board:
         # Check if resulting level is higher than the starting level
         if self.selected_tokens[0].level >= destination_tile_tokens_count + 1:
             print(f'{fcolors.FAIL}You are attempting to move token to lower or equal level{fcolors.ENDC}')
-            return
+            return is_winning_move
         
         # Check if resulting stack would have more than 8 tokens
         resulting_stack_size = selected_tokens_count + destination_tile_tokens_count
         if resulting_stack_size > 8:
             print(f'{fcolors.FAIL}You are attempting to make stack of size {resulting_stack_size}{fcolors.ENDC}')
-            return
+            return is_winning_move
 
         # Update old tile in board dictionary
         self.board[(current_row, current_column)] = self.board[(current_row, current_column)][:current_tile_tokens_count-selected_tokens_count]
@@ -126,7 +131,22 @@ class Board:
             print(f'{fcolors.OKGREEN}Stack with size 8 was created{fcolors.ENDC}')
             # Delete the tokens
             self.board[(row, column)] = []
-
+            # Update the points
+            if self.current_player in ['h', 'H']:
+                self.human_points += 1
+            else:
+                self.computer_points += 1
+            # Check if there is a winner
+            max_points = (self.board_size**2 - 2*self.board_size) // 16
+            winning_point = max_points // 2 + 1
+            if self.human_points == winning_point or self.computer_points == winning_point:
+                is_winning_move = True
+            else:
+                print(f'{fcolors.OKGREEN}############################')
+                print(f'### Human: {self.human_points} Computer: {self.computer_points} ###')
+                print(f'############################{fcolors.ENDC}')
+            
         # Change current player
         self.current_player = 'h' if self.current_player in ['c', 'C'] else 'c'
 
+        return is_winning_move
