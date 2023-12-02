@@ -14,3 +14,19 @@ def are_neighbours(source_tile, destination_tile):
     if x_distance > 1 or y_distance > 1:
         return False
     return True
+
+def add_tuples(tuple1, tuple2):
+    return tuple(a + b for a, b in zip(tuple1, tuple2))
+
+def can_move(board, destination_row, destination_column):
+    selected_row = board.selected_tokens[0].row
+    selected_column = board.selected_tokens[0].column
+
+    lowest_selected_token_level = board.selected_tokens[0].level if board.selected_tokens else 0
+    destination_highest_token_level = board.board[(destination_row, destination_column)][-1].level if board.board[(destination_row, destination_column)] else 0
+
+    # Check for level constraint
+    if lowest_selected_token_level >= destination_highest_token_level + 1:
+        return False
+
+    return True

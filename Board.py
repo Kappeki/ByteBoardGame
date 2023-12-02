@@ -59,7 +59,7 @@ class Board:
                         return
                     if self.current_player in ['c', 'C'] and token.color == colors.WHITE:
                         return
-                    
+                    # Deselect token
                     if self.selected_tokens and token == self.selected_tokens[0]:
                         self.change_selected_tokens_status()
                         self.selected_tokens = []
@@ -68,6 +68,11 @@ class Board:
                     self.selected_tokens = []
                     self.selected_tokens = [stack[j] for j in range(i, len(stack))]
                     self.change_selected_tokens_status()
+                    # Find playable tile
+
+                    # Check for level constrain
+                    
+
 
     def move_stack(self, row, column) -> bool:
 

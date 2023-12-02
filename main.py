@@ -8,9 +8,9 @@ def start_game(board_size, first_player):
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
     if first_player in ['h', 'H']:
-        pygame.display.set_caption('Byte - HUMAN (white) TURN')
+        pygame.display.set_caption('Byte - HUMAN TURN (white)')
     else:
-        pygame.display.set_caption('Byte - COMPUTER (black) TURN')
+        pygame.display.set_caption('Byte - COMPUTER TURN (black) ')
 
     running = True
 
