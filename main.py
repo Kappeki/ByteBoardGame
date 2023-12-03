@@ -1,7 +1,8 @@
 import pygame
 from GUI import GUI
 from Board import Board
-from utils import get_clicked_tile_position
+from utils import get_clicked_tile_position, print_score
+from color import fcolors
 
 
 def start_game(board_size, first_player):
@@ -34,7 +35,7 @@ def start_game(board_size, first_player):
                     is_winning_move = board.move_stack(row, column)
                     if is_winning_move:
                         print('Human won!') if board.human_points > board.computer_points else print('Computer won!')
-                        print(f'Human: {board.human_points} Computer: {board.computer_points}')
+                        print_score(board.human_points, board.computer_points)
                         running = False
 
         gui.draw_board(board)

@@ -1,4 +1,5 @@
 import random
+from color import fcolors
 
 
 def get_clicked_tile_position(x, y, board_size, tile_size):
@@ -113,3 +114,17 @@ def determine_tile_color(board, row, column):
                     color = highlighted_color
 
     return color
+
+def print_score(human_points, computer_points):
+    print(f'{fcolors.OKGREEN}############################')
+    print(f'### Human: {human_points} Computer: {computer_points} ###')
+    print(f'############################{fcolors.ENDC}')
+
+def print_error(text):
+    print(f'{fcolors.FAIL}{text}{fcolors.ENDC}')
+
+def print_warning(text):
+    print(f'{fcolors.WARNING}{text}{fcolors.ENDC}')
+
+def print_green(text):
+    print(f'{fcolors.OKGREEN}{text}{fcolors.ENDC}')

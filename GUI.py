@@ -2,7 +2,7 @@ import pygame
 import color.colors as colors
 from Board import Board
 from Token import Token
-from utils import add_tuples, determine_tile_color
+from utils import determine_tile_color
 
 
 class GUI:
@@ -25,7 +25,7 @@ class GUI:
                 tile_rect = (column*board.tile_size, row*board.tile_size, board.tile_size, board.tile_size)
                 pygame.draw.rect(self.screen, color, tile_rect)
 
-                if (row, column) in board.playable_tiles:
+                if (row, column) in board.board:
                     stack = board.board[(row, column)]
                     self.draw_stack(stack, board.tile_size)
 

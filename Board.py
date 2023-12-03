@@ -2,7 +2,7 @@ from Token import Token
 import color.colors as colors
 import color.fcolors as fcolors
 from typing import List
-from utils import are_neighbours, get_clicked_tile_position
+from utils import are_neighbours, get_clicked_tile_position, print_score, print_error, print_warning, print_green
 
 
 class Board:
@@ -11,7 +11,6 @@ class Board:
         self.board = {}
         self.board_size = board_size
         self.tile_size = tile_size
-        self.playable_tiles = []
         self.board_light = colors.BEIGE
         self.board_dark = colors.BROWN
         self.selected_tokens: List[Token] = []
@@ -35,7 +34,6 @@ class Board:
             for column in range(self.board_size)
             if (row % 2 == column % 2)
         }
-        self.playable_tiles = list(self.board.keys())
 
     def highlight_clicked_token(self, x, y):
         token_width = int(self.tile_size * 0.8)
@@ -79,12 +77,12 @@ class Board:
         # Check if token was selected
         selected_tokens_count = len(self.selected_tokens)
         if selected_tokens_count == 0:
-            print(f'{fcolors.WARNING}No token was selected{fcolors.ENDC}')
+            print_warning("No token was selected")
             return is_winning_move
 
         # Check if row, column are playable tiles
-        if (row, column) not in self.playable_tiles:
-            print(f'{fcolors.FAIL}Tile is not playable{fcolors.ENDC}')
+        if (row, column) not in self.board:
+            print_error("Tile is not playable")
             return is_winning_move
         
         current_row = self.selected_tokens[0].row
@@ -92,12 +90,12 @@ class Board:
 
         # Check if destination tile is the same as current tile
         if row == current_row and column == current_column:
-            print(f'{fcolors.WARNING}Source and destination tiles are same{fcolors.ENDC}')
+            print_warning("Source and destination tiles are same")
             return is_winning_move
         
         # Check if tiles are in neighbourhood
         if not are_neighbours((current_row, current_column), (row, column)):
-            print(f'{fcolors.FAIL}Destination tile is too far away{fcolors.ENDC}')
+            print_error("Destination tile is too far away")
             return is_winning_move
         
         current_tile_tokens_count = len(self.board[(current_row, current_column)])
@@ -105,13 +103,13 @@ class Board:
 
         # Check if resulting level is higher than the starting level
         if self.selected_tokens[0].level >= destination_tile_tokens_count + 1:
-            print(f'{fcolors.FAIL}You are attempting to move token to lower or equal level{fcolors.ENDC}')
+            print_error("You are attempting to move token to lower or equal level")
             return is_winning_move
         
         # Check if resulting stack would have more than 8 tokens
         resulting_stack_size = selected_tokens_count + destination_tile_tokens_count
         if resulting_stack_size > 8:
-            print(f'{fcolors.FAIL}You are attempting to make stack of size {resulting_stack_size}{fcolors.ENDC}')
+            print_error(f"You are attempting to make stack of size {resulting_stack_size}")
             return is_winning_move
 
         # Update old tile in board dictionary
@@ -131,7 +129,7 @@ class Board:
 
         # Check if stack of size 8 has been created
         if len(self.board[(row, column)]) == 8:
-            print(f'{fcolors.OKGREEN}Stack with size 8 was created{fcolors.ENDC}')
+            print_green("Stack with size 8 was created")
             # Delete the tokens
             self.board[(row, column)] = []
             # Update the points
@@ -145,9 +143,7 @@ class Board:
             if self.human_points == winning_point or self.computer_points == winning_point:
                 is_winning_move = True
             else:
-                print(f'{fcolors.OKGREEN}############################')
-                print(f'### Human: {self.human_points} Computer: {self.computer_points} ###')
-                print(f'############################{fcolors.ENDC}')
+                print_score(self.human_points, self.computer_points)
             
         # Change current player
         self.current_player = 'h' if self.current_player in ['c', 'C'] else 'c'
