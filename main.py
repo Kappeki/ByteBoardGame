@@ -57,3 +57,5 @@ if __name__ == '__main__':
         first_player = input('Who is to make the first move [h/c]: ')
 
     start_game(board_size, first_player)
+
+

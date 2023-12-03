@@ -2,7 +2,7 @@ import pygame
 import color.colors as colors
 from Board import Board
 from Token import Token
-from utils import add_tuples, can_move
+from utils import add_tuples, determine_tile_color
 
 
 class GUI:
@@ -16,26 +16,12 @@ class GUI:
             pygame.display.set_caption('Byte - HUMAN TURN (white)')
         else:
             pygame.display.set_caption('Byte - COMPUTER TURN (black) ')
-        
-        selected_tile_row = board.selected_tokens[0].row if board.selected_tokens else -2
-        selected_tile_column = board.selected_tokens[0].column if board.selected_tokens else -2
-        highlighted_color = add_tuples(board.board_dark, (20, 20, 20))
-        possible_destination_tiles = [
-            (selected_tile_row + 1, selected_tile_column + 1),
-            (selected_tile_row + 1, selected_tile_column - 1),
-            (selected_tile_row - 1, selected_tile_column + 1),
-            (selected_tile_row - 1, selected_tile_column - 1),
-        ]
 
         # Draw board
         for row in range(board.board_size):
             for column in range(board.board_size):
-
-                if (row, column) in possible_destination_tiles and can_move(board, row, column):
-                    color = highlighted_color
-                else:
-                    color = board.board_dark if (row + column) % 2 == 0 else board.board_light
-
+                
+                color = determine_tile_color(board, row, column)
                 tile_rect = (column*board.tile_size, row*board.tile_size, board.tile_size, board.tile_size)
                 pygame.draw.rect(self.screen, color, tile_rect)
 

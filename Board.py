@@ -2,7 +2,7 @@ from Token import Token
 import color.colors as colors
 import color.fcolors as fcolors
 from typing import List
-from utils import are_neighbours
+from utils import are_neighbours, get_clicked_tile_position
 
 
 class Board:
@@ -41,8 +41,10 @@ class Board:
         token_width = int(self.tile_size * 0.8)
         token_height = self.tile_size // 8
         tile_padding = (self.tile_size - token_width) / 2
+        row, column = get_clicked_tile_position(x, y, self.board_size, self.tile_size)
 
-        for stack in self.board.values():
+        if (row, column) in self.board:
+            stack = self.board[(row, column)]
             for i in range(len(stack)):
                 token = stack[i]
                 token_x = token.column * self.tile_size + tile_padding
@@ -68,10 +70,6 @@ class Board:
                     self.selected_tokens = []
                     self.selected_tokens = [stack[j] for j in range(i, len(stack))]
                     self.change_selected_tokens_status()
-                    # Find playable tile
-
-                    # Check for level constrain
-                    
 
 
     def move_stack(self, row, column) -> bool:
