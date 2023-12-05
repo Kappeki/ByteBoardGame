@@ -1,32 +1,42 @@
-from Token import Token
-import color.colors as colors
-import color.fcolors as fcolors
-from typing import List
-from utils import are_neighbours, get_clicked_tile_position, print_score, print_error, print_warning, print_green
+from typing import List, Literal, Dict, Tuple
+
+from .token import Token
+from utils import colors
+from utils.movement import get_clicked_tile_position, are_neighbours
+from utils.utils import print_error, print_green, print_score, print_warning
 
 
 class Board:
 
-    def __init__(self, board_size, tile_size, current_player):
-        self.board = {}
-        self.board_size = board_size
-        self.tile_size = tile_size
-        self.board_light = colors.BEIGE
-        self.board_dark = colors.BROWN
+    def __init__(
+            self, 
+            board_size: int, 
+            tile_size: int, 
+            current_player: Literal['h', 'H', 'c', 'C']
+        ) -> None:
+        self.board: Dict = {}
+        self.human_points: int = 0
+        self.computer_points: int = 0
+        self.tile_size: int = tile_size
+        self.board_size: int = board_size
         self.selected_tokens: List[Token] = []
-        self.current_player = current_player
-        self.human_points = 0
-        self.computer_points = 0
+        self.board_dark: Tuple[int, int, int] = colors.BROWN
+        self.board_light: Tuple[int, int, int] = colors.BEIGE
+        self.current_player: Literal['h', 'H', 'c', 'C'] = current_player
 
-    def change_selected_tokens_status(self):
+    def change_selected_tokens_status(
+            self
+        ) -> None:
         [selected_token.change_selected_status() for selected_token in self.selected_tokens]
 
-    def initialize_board(self):
+    def initialize_board(
+            self
+        ) -> None:
         token_width = int(self.tile_size * 0.8)
         token_height = self.tile_size // 8
         self.board = {
             (row, column): [] if row in (0, self.board_size - 1) else [
-                Token(row, column, row % 2, token_width, token_height, 1),
+                Token(row, column, colors.BLACK if row % 2 else colors.WHITE, token_width, token_height, 1),
                 # Token(row, column, row % 2, token_width, token_height, 2),
                 # Token(row, column, row % 2, token_width, token_height, 3),
             ]
@@ -35,11 +45,15 @@ class Board:
             if (row % 2 == column % 2)
         }
 
-    def highlight_clicked_token(self, x, y):
+    def highlight_clicked_token(
+            self, 
+            x: int, 
+            y: int
+        ) -> None:
         token_width = int(self.tile_size * 0.8)
         token_height = self.tile_size // 8
         tile_padding = (self.tile_size - token_width) / 2
-        row, column = get_clicked_tile_position(x, y, self.board_size, self.tile_size)
+        row, column = get_clicked_tile_position(x, y, self.tile_size)
 
         if (row, column) in self.board:
             stack = self.board[(row, column)]
@@ -70,7 +84,11 @@ class Board:
                     self.change_selected_tokens_status()
 
 
-    def move_stack(self, row, column) -> bool:
+    def move_stack(
+            self, 
+            row: int, 
+            column: int
+        ) -> bool:
 
         is_winning_move = False
 

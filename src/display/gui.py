@@ -1,23 +1,24 @@
 import pygame
-import color.colors as colors
-from Board import Board
-from Token import Token
-from utils import determine_tile_color
+from typing import List, Tuple
+
+from utils import colors
+from board.board import Board
+from board.token import Token
+from .board_display import determine_tile_color
 
 
 class GUI:
 
-    def __init__(self, screen):
+    def __init__(
+            self, 
+            screen: pygame.Surface
+        ) -> None:
         self.screen = screen
 
-    def draw_board(self, board: Board):
-        # Define whose turn it is
-        if board.current_player in ['h', 'H']:
-            pygame.display.set_caption('Byte - HUMAN TURN (white)')
-        else:
-            pygame.display.set_caption('Byte - COMPUTER TURN (black) ')
-
-        # Draw board
+    def draw_board(
+            self, 
+            board: Board
+        ) -> None:
         for row in range(board.board_size):
             for column in range(board.board_size):
                 
@@ -29,11 +30,19 @@ class GUI:
                     stack = board.board[(row, column)]
                     self.draw_stack(stack, board.tile_size)
 
-    def draw_stack(self, stack, tile_size):
+    def draw_stack(
+            self, 
+            stack: List[Token], 
+            tile_size: int
+        ) -> None:
         for token in stack:
             self.draw_token(token, tile_size)
 
-    def draw_token(self, token: Token, tile_size):
+    def draw_token(
+            self, 
+            token: Token, 
+            tile_size: int
+        ) -> None:
         tile_padding = (tile_size - token.width) / 2
         token_color = token.color
         token_size = (token.width, token.height)
@@ -48,8 +57,21 @@ class GUI:
             token_size[0] + token_thickness * 2,
             token_size[1] + token_thickness * 2
         ]
-        border_color = colors.GREEN if token.selected else colors.BLACK if token_color == colors.WHITE else colors.WHITE
+        border_color = self.get_border_color(token)
 
         pygame.draw.rect(self.screen, border_color, border_rect)    
         pygame.draw.rect(self.screen, token_color, (token_position, token_size))
 
+    def get_border_color(self, token: Token) -> Tuple[int, int, int]:
+        if token.selected:
+            return colors.GREEN
+        elif token.color == colors.WHITE:
+            return colors.BLACK
+        else:
+            return colors.WHITE
+
+    def update_caption(self, current_player: str) -> None:
+        if current_player in ['h', 'H']:
+            pygame.display.set_caption('Byte - HUMAN TURN (white)')
+        else:
+            pygame.display.set_caption('Byte - COMPUTER TURN (black)')
