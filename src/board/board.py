@@ -2,7 +2,7 @@ from typing import List, Literal, Dict, Tuple
 
 from .token import Token
 from utils import colors
-from utils.movement import get_clicked_tile_position, are_neighbours
+from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours
 from utils.utils import print_error, print_green, print_score, print_warning
 
 
@@ -83,7 +83,6 @@ class Board:
                     self.selected_tokens = [stack[j] for j in range(i, len(stack))]
                     self.change_selected_tokens_status()
 
-
     def move_stack(
             self, 
             row: int, 
@@ -119,10 +118,17 @@ class Board:
         current_tile_tokens_count = len(self.board[(current_row, current_column)])
         destination_tile_tokens_count = len(self.board[(row, column)])
 
-        # Check if resulting level is higher than the starting level
-        if self.selected_tokens[0].level >= destination_tile_tokens_count + 1:
-            print_error("You are attempting to move token to lower or equal level")
-            return is_winning_move
+        # Check if current tile has neighbours
+        if has_neighbours(self.board, self.board_size, current_row, current_column):
+            # Check if resulting level is higher than the starting level
+            if self.selected_tokens[0].level >= destination_tile_tokens_count + 1:
+                print_error("You are attempting to move token to lower or equal level")
+                return is_winning_move
+        else:
+            # Check if destination tile is in the list of potential moves
+            if (row, column) not in get_potential_moves(self.board, self.board_size, current_row, current_column):
+                print_error("Tile is not playable")
+                return is_winning_move
         
         # Check if resulting stack would have more than 8 tokens
         resulting_stack_size = selected_tokens_count + destination_tile_tokens_count

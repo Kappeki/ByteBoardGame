@@ -82,8 +82,8 @@ def find_closest_directions(board_dict, current_row, current_col, board_size):
 
     return list(possible_moves)
 
-def get_potential_moves(board, selected_row, selected_column):
-    closest_directions = find_closest_directions(board.board, selected_row, selected_column, board.board_size)
+def get_potential_moves(board_dict, board_size, selected_row, selected_column):
+    closest_directions = find_closest_directions(board_dict, selected_row, selected_column, board_size)
 
     # Filter for valid diagonal moves on black tiles
     potential_moves = [

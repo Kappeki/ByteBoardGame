@@ -24,7 +24,7 @@ def should_highlight_tile(board, row, column):
     if has_neighbours(board.board, board.board_size, selected_tile_row, selected_tile_column):
         return not is_selected_tile(selected_tile_row, selected_tile_column, row, column) and is_neighbour and has_move
     else:
-        potential_moves = get_potential_moves(board, selected_tile_row, selected_tile_column)
+        potential_moves = get_potential_moves(board.board, board.board_size, selected_tile_row, selected_tile_column)
         return (row, column) in potential_moves
 
 def lighten_color(color):
