@@ -4,6 +4,9 @@ from . import fcolors
 def add_tuples(tuple1, tuple2):
     return tuple(a + b for a, b in zip(tuple1, tuple2))
 
+def lighten_color(color_tuple):
+    return tuple(min(chanel + 20, 255) for chanel in color_tuple)
+
 def print_score(human_points, computer_points):
     print(f'{fcolors.OKGREEN}############################')
     print(f'### Human: {human_points} Computer: {computer_points} ###')

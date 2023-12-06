@@ -1,30 +1,21 @@
+from typing import Dict, List, Tuple
+
 from .utils import add_tuples
 
 
-def get_clicked_tile_position(x, y, tile_size):
+def get_clicked_tile_position(
+        x: int, 
+        y: int, 
+        tile_size: int
+    ) -> Tuple[int, int]:
     column = x // tile_size
     row = y // tile_size
     return row, column
 
-def can_move(board, destination_row, destination_column):
-    """
-    For now, this function is used to check which tiles to highlight as potential destinations
-    In the furure, this function can be used for all movement constrain checks when moving a stack
-    """
-    selected_row = board.selected_tokens[0].row
-    selected_column = board.selected_tokens[0].column
-
-    # Checking token level
-    lowest_selected_token_level = board.selected_tokens[0].level if board.selected_tokens else 0
-    destination_stack = board.board.get((destination_row, destination_column), [])
-    highest_destination_token_level = destination_stack[-1].level if destination_stack else 0
-
-    if lowest_selected_token_level >= highest_destination_token_level + 1:
-        return False
-
-    return True
-
-def are_neighbours(source_tile, destination_tile):
+def are_neighbours(
+        source_tile: Tuple[int, int], 
+        destination_tile: Tuple[int, int]
+    ) -> bool:
     if source_tile == destination_tile:
         return False
     x_distance = abs(destination_tile[1] - source_tile[1])
@@ -33,7 +24,12 @@ def are_neighbours(source_tile, destination_tile):
         return False
     return True
 
-def has_neighbours(board_dict, board_size, selected_row, selected_column):
+def has_neighbours(
+        board_dict: Dict, 
+        board_size: int, 
+        selected_row: int, 
+        selected_column: int
+    ) -> bool:
     neighbor_positions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 
     for row_offset, col_offset in neighbor_positions:
@@ -46,18 +42,79 @@ def has_neighbours(board_dict, board_size, selected_row, selected_column):
 
     return False
 
-def find_closest_directions(board_dict, current_row, current_col, board_size):
-    closest_distance = float('inf')
+def is_inside_board(
+        tile: Tuple[int, int],
+        board_size: int
+    ) -> bool:
+    return tile[0] >= 0 and tile[1] >= 0 and tile[0] <= board_size-1 and tile[1] <= board_size-1
+
+def find_closest_tiles(
+        board_dict: Dict, 
+        board_size: int, 
+        current_row: int, 
+        current_column: int
+    ) -> List[Tuple[int, int]]:
+    left_tile = (current_row-1, current_column-1)
+    right_tile = (current_row+1, current_column+1)
+    found = False
     closest_tiles = []
 
-    for (row, col), stack in board_dict.items():
-        if stack and (row, col) != (current_row, current_col):
-            distance = max(abs(row - current_row), abs(col - current_col))
-            if distance < closest_distance:
-                closest_distance = distance
-                closest_tiles = [(row, col)]
-            elif distance == closest_distance:
-                closest_tiles.append((row, col))
+    while not found:
+
+        left_tile_h = left_tile
+        left_tile_v = left_tile
+        right_tile_h = right_tile
+        right_tile_v = right_tile
+
+        if is_inside_board(left_tile, board_size) or is_inside_board(right_tile, board_size):
+            while left_tile_h != right_tile_v and left_tile_v != right_tile_h:
+                if is_inside_board(left_tile_h, board_size) and board_dict[left_tile_h]:
+                    closest_tiles.append(left_tile_h)
+                    found = True
+                if is_inside_board(left_tile_v, board_size) and  board_dict[left_tile_v] and left_tile_v != left_tile_h:
+                    closest_tiles.append(left_tile_v)
+                    found = True
+                if is_inside_board(right_tile_h, board_size) and board_dict[right_tile_h]:
+                    closest_tiles.append(right_tile_h)
+                    found = True
+                if is_inside_board(right_tile_v, board_size) and board_dict[right_tile_v] and right_tile_v != right_tile_h:
+                    closest_tiles.append(right_tile_v)
+                    found = True
+                left_tile_h = (left_tile_h[0], left_tile_h[1] + 2)
+                left_tile_v = (left_tile_v[0] + 2, left_tile_v[1])
+                right_tile_h = (right_tile_h[0], right_tile_h[1] - 2)
+                right_tile_v = (right_tile_v[0] - 2, right_tile_v[1])
+
+            if is_inside_board(left_tile_h, board_size) and board_dict[left_tile_h]:
+                closest_tiles.append(left_tile_h)
+                found = True
+            if is_inside_board(left_tile_v, board_size) and board_dict[left_tile_v]:
+                closest_tiles.append(left_tile_v)
+                found = True
+
+        left_tile = (left_tile[0]-1, left_tile[1]-1)
+        right_tile = (right_tile[0]+1, right_tile[1]+1)
+
+    return closest_tiles
+
+def find_closest_directions(
+        board_dict: Dict, 
+        board_size: int, 
+        current_row: int, 
+        current_column: int
+    ) -> List[Tuple[int, int]]:
+    # closest_distance = float('inf')
+    closest_tiles = []
+
+    closest_tiles = find_closest_tiles(board_dict, board_size, current_row, current_column)
+    # for (row, col), stack in board_dict.items():
+    #     if stack and (row, col) != (current_row, current_column):
+    #         distance = max(abs(row - current_row), abs(col - current_column))
+    #         if distance < closest_distance:
+    #             closest_distance = distance
+    #             closest_tiles = [(row, col)]
+    #         elif distance == closest_distance:
+    #             closest_tiles.append((row, col))
 
     if not closest_tiles:
         return closest_tiles
@@ -66,33 +123,31 @@ def find_closest_directions(board_dict, current_row, current_col, board_size):
 
     for tile in closest_tiles:
         direction_row = tile[0] - current_row
-        direction_col = tile[1] - current_col
+        direction_column = tile[1] - current_column
 
         row_step = 1 if direction_row > 0 else (-1 if direction_row < 0 else 0)
-        col_step = 1 if direction_col > 0 else (-1 if direction_col < 0 else 0)
+        column_step = 1 if direction_column > 0 else (-1 if direction_column < 0 else 0)
 
-        if abs(direction_row) > abs(direction_col):
+        if abs(direction_row) > abs(direction_column):
             possible_moves.add((row_step, -1))
             possible_moves.add((row_step, 1))
-        elif abs(direction_row) < abs(direction_col):
-            possible_moves.add((-1, col_step))
-            possible_moves.add((1, col_step))
+        elif abs(direction_row) < abs(direction_column):
+            possible_moves.add((-1, column_step))
+            possible_moves.add((1, column_step))
         else:
-            possible_moves.add((row_step, col_step))
+            possible_moves.add((row_step, column_step))
 
     return list(possible_moves)
 
-def get_potential_moves(board_dict, board_size, selected_row, selected_column):
-    closest_directions = find_closest_directions(board_dict, selected_row, selected_column, board_size)
-
-    # Filter for valid diagonal moves on black tiles
+def get_potential_moves(
+        board_dict: Dict, 
+        board_size: int, 
+        selected_row: int, 
+        selected_column: int
+    ) -> List[Tuple[int, int]]:
+    closest_directions = find_closest_directions(board_dict, board_size, selected_row, selected_column)
     potential_moves = [
         add_tuples((selected_row, selected_column), direction)
         for direction in closest_directions
-        if is_black_tile(*add_tuples((selected_row, selected_column), direction))
     ]
-
     return potential_moves
-
-def is_black_tile(row, column):
-    return (row + column) % 2 == 0

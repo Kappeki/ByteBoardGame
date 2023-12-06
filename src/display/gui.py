@@ -1,10 +1,9 @@
 import pygame
-from typing import List, Tuple
+from typing import List, Literal, Tuple
 
 from utils import colors
 from board.board import Board
 from board.token import Token
-from .board_display import determine_tile_color
 
 
 class GUI:
@@ -21,8 +20,8 @@ class GUI:
         ) -> None:
         for row in range(board.board_size):
             for column in range(board.board_size):
-                
-                color = determine_tile_color(board, row, column)
+
+                color = board.determine_tile_color(row, column)
                 tile_rect = (column*board.tile_size, row*board.tile_size, board.tile_size, board.tile_size)
                 pygame.draw.rect(self.screen, color, tile_rect)
 
@@ -62,7 +61,10 @@ class GUI:
         pygame.draw.rect(self.screen, border_color, border_rect)    
         pygame.draw.rect(self.screen, token_color, (token_position, token_size))
 
-    def get_border_color(self, token: Token) -> Tuple[int, int, int]:
+    def get_border_color(
+            self, 
+            token: Token
+        ) -> Tuple[int, int, int]:
         if token.selected:
             return colors.GREEN
         elif token.color == colors.WHITE:
@@ -70,7 +72,10 @@ class GUI:
         else:
             return colors.WHITE
 
-    def update_caption(self, current_player: str) -> None:
+    def update_caption(
+            self, 
+            current_player: Literal['h', 'H', 'c', 'C']
+        ) -> None:
         if current_player in ['h', 'H']:
             pygame.display.set_caption('Byte - HUMAN TURN (white)')
         else:
