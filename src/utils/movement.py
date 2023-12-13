@@ -66,31 +66,30 @@ def find_closest_tiles(
         right_tile_h = right_tile
         right_tile_v = right_tile
 
-        if is_inside_board(left_tile, board_size) or is_inside_board(right_tile, board_size):
-            while left_tile_h != right_tile_v and left_tile_v != right_tile_h:
-                if is_inside_board(left_tile_h, board_size) and board_dict[left_tile_h]:
-                    closest_tiles.append(left_tile_h)
-                    found = True
-                if is_inside_board(left_tile_v, board_size) and  board_dict[left_tile_v] and left_tile_v != left_tile_h:
-                    closest_tiles.append(left_tile_v)
-                    found = True
-                if is_inside_board(right_tile_h, board_size) and board_dict[right_tile_h]:
-                    closest_tiles.append(right_tile_h)
-                    found = True
-                if is_inside_board(right_tile_v, board_size) and board_dict[right_tile_v] and right_tile_v != right_tile_h:
-                    closest_tiles.append(right_tile_v)
-                    found = True
-                left_tile_h = (left_tile_h[0], left_tile_h[1] + 2)
-                left_tile_v = (left_tile_v[0] + 2, left_tile_v[1])
-                right_tile_h = (right_tile_h[0], right_tile_h[1] - 2)
-                right_tile_v = (right_tile_v[0] - 2, right_tile_v[1])
-
+        while left_tile_h != right_tile_v and left_tile_v != right_tile_h:
             if is_inside_board(left_tile_h, board_size) and board_dict[left_tile_h]:
                 closest_tiles.append(left_tile_h)
                 found = True
-            if is_inside_board(left_tile_v, board_size) and board_dict[left_tile_v]:
+            if is_inside_board(left_tile_v, board_size) and  board_dict[left_tile_v] and left_tile_v != left_tile_h:
                 closest_tiles.append(left_tile_v)
                 found = True
+            if is_inside_board(right_tile_h, board_size) and board_dict[right_tile_h]:
+                closest_tiles.append(right_tile_h)
+                found = True
+            if is_inside_board(right_tile_v, board_size) and board_dict[right_tile_v] and right_tile_v != right_tile_h:
+                closest_tiles.append(right_tile_v)
+                found = True
+            left_tile_h = (left_tile_h[0], left_tile_h[1] + 2)
+            left_tile_v = (left_tile_v[0] + 2, left_tile_v[1])
+            right_tile_h = (right_tile_h[0], right_tile_h[1] - 2)
+            right_tile_v = (right_tile_v[0] - 2, right_tile_v[1])
+
+        if is_inside_board(left_tile_h, board_size) and board_dict[left_tile_h]:
+            closest_tiles.append(left_tile_h)
+            found = True
+        if is_inside_board(left_tile_v, board_size) and board_dict[left_tile_v]:
+            closest_tiles.append(left_tile_v)
+            found = True
 
         left_tile = (left_tile[0]-1, left_tile[1]-1)
         right_tile = (right_tile[0]+1, right_tile[1]+1)
