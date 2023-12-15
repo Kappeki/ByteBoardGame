@@ -94,6 +94,10 @@ def find_closest_tiles(
         left_tile = (left_tile[0]-1, left_tile[1]-1)
         right_tile = (right_tile[0]+1, right_tile[1]+1)
 
+        if current_row - left_tile[0] >= board_size:
+            # To prevent infinite loop
+            found = True
+
     return closest_tiles
 
 def find_closest_directions(
@@ -102,18 +106,9 @@ def find_closest_directions(
         current_row: int, 
         current_column: int
     ) -> List[Tuple[int, int]]:
-    # closest_distance = float('inf')
     closest_tiles = []
 
     closest_tiles = find_closest_tiles(board_dict, board_size, current_row, current_column)
-    # for (row, col), stack in board_dict.items():
-    #     if stack and (row, col) != (current_row, current_column):
-    #         distance = max(abs(row - current_row), abs(col - current_column))
-    #         if distance < closest_distance:
-    #             closest_distance = distance
-    #             closest_tiles = [(row, col)]
-    #         elif distance == closest_distance:
-    #             closest_tiles.append((row, col))
 
     if not closest_tiles:
         return closest_tiles

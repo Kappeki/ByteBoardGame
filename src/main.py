@@ -10,9 +10,9 @@ from utils.movement import get_clicked_tile_position
 def end_game(
         board: Board
     ) -> bool:
-    winner = 'Human' if board.human_points > board.computer_points else 'Computer'
+    winner = 'White' if board.white_points > board.black_points else 'Black'
     print(f'{winner} won!')
-    print_score(board.human_points, board.computer_points)
+    print_score(board.white_points, board.black_points)
     return False
 
 
@@ -37,7 +37,7 @@ def handle_mouse_button(
     ) -> bool:
     x, y = event.pos
     if event.button == 1:
-        board.highlight_clicked_token(x, y)
+        board.change_clicked_stack_status(x, y)
     elif event.button == 3:
         return process_move(board, x, y, tile_size)
     return running
@@ -64,7 +64,7 @@ def process_events(
 def setup_game(
         screen: pygame.Surface, 
         board_size: int, 
-        first_player: Literal['h', 'H', 'c', 'C']
+        first_player: Literal['w', 'W', 'b', 'B']
     ) -> Tuple[GUI, Board]:
     gui = GUI(screen)
     tile_size = screen.get_height() // board_size
@@ -75,7 +75,7 @@ def setup_game(
 
 def start_game(
         board_size: int, 
-        first_player: Literal['h', 'H', 'c', 'C']
+        first_player: Literal['w', 'W', 'b', 'B']
     ) -> None:
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
@@ -98,10 +98,10 @@ if __name__ == '__main__':
         board_size = int(input('Input board size: '))
 
     # first_player = input('Who is to make the first move [h/c]: ')
-    first_player = 'h'
-    while first_player not in ['h', 'H', 'c', 'C']:
+    first_player = 'w'
+    while first_player not in ['w', 'W', 'b', 'B']:
         print('Wrong input. Try again!')
-        first_player = input('Who is to make the first move [h/c]: ')
+        first_player = input('Who is to make the first move [w/b]: ')
 
     start_game(board_size, first_player)
 

@@ -74,9 +74,9 @@ class GUI:
 
     def update_caption(
             self, 
-            current_player: Literal['h', 'H', 'c', 'C']
+            current_player: Literal['w', 'W', 'b', 'B']
         ) -> None:
-        if current_player in ['h', 'H']:
-            pygame.display.set_caption('Byte - HUMAN TURN (white)')
+        if current_player in ['w', 'W']:
+            pygame.display.set_caption('Byte - WHITE TURN')
         else:
-            pygame.display.set_caption('Byte - COMPUTER TURN (black)')
+            pygame.display.set_caption('Byte - BLACK TURN')

@@ -12,17 +12,17 @@ class Board:
             self, 
             board_size: int, 
             tile_size: int, 
-            current_player: Literal['h', 'H', 'c', 'C']
+            current_player: Literal['w', 'W', 'b', 'B']
         ) -> None:
         self.board: Dict = {}
-        self.human_points: int = 0
-        self.computer_points: int = 0
+        self.white_points: int = 0
+        self.black_points: int = 0
         self.tile_size: int = tile_size
         self.board_size: int = board_size
         self.selected_tokens: List[Token] = []
         self.board_dark: Tuple[int, int, int] = colors.BROWN
         self.board_light: Tuple[int, int, int] = colors.BEIGE
-        self.current_player: Literal['h', 'H', 'c', 'C'] = current_player
+        self.current_player: Literal['w', 'W', 'b', 'B'] = current_player
 
     def change_selected_tokens_status(
             self
@@ -45,7 +45,7 @@ class Board:
             if (row % 2 == column % 2)
         }
 
-    def highlight_clicked_token(
+    def change_clicked_stack_status(
             self, 
             x: int, 
             y: int
@@ -67,9 +67,9 @@ class Board:
 
                 if token_x_min <= x <= token_x_max and token_y_min <= y <= token_y_max:
                     # Abort if opposite player token has been attempted to select
-                    if self.current_player in ['h', 'H'] and token.color == colors.BLACK:
+                    if self.current_player in ['w', 'W'] and token.color == colors.BLACK:
                         return
-                    if self.current_player in ['c', 'C'] and token.color == colors.WHITE:
+                    if self.current_player in ['b', 'B'] and token.color == colors.WHITE:
                         return
                     
                     # Deselect token
@@ -124,6 +124,10 @@ class Board:
                 print_error("You are attempting to move token to lower or equal level")
                 return is_winning_move
         else:
+            # Check if whole stack is selected
+            if self.selected_tokens[0].level != 1:
+                print_warning("Whole stack must be selected")
+                return is_winning_move
             # Check if destination tile is in the list of potential moves
             if (row, column) not in get_potential_moves(self.board, self.board_size,current_row, current_column):
                 print_error("Tile is not playable")
@@ -153,23 +157,23 @@ class Board:
         # Check if stack of size 8 has been created
         if len(self.board[(row, column)]) == 8:
             print_green("Stack with size 8 was created")
+            # Update the points
+            if self.board[(row, column)][-1].color == colors.WHITE:
+                self.white_points += 1
+            else:
+                self.black_points += 1
             # Delete the tokens
             self.board[(row, column)] = []
-            # Update the points
-            if self.current_player in ['h', 'H']:
-                self.human_points += 1
-            else:
-                self.computer_points += 1
             # Check if there is a winner
             max_points = (self.board_size**2 - 2*self.board_size) // 16
             winning_point = max_points // 2 + 1
-            if self.human_points == winning_point or self.computer_points == winning_point:
+            if self.white_points == winning_point or self.black_points == winning_point:
                 is_winning_move = True
             else:
-                print_score(self.human_points, self.computer_points)
+                print_score(self.white_points, self.black_points)
             
         # Change current player
-        self.current_player = 'h' if self.current_player in ['c', 'C'] else 'c'
+        self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
 
         return is_winning_move
 
