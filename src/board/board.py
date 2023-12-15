@@ -2,7 +2,7 @@ from typing import List, Literal, Dict, Tuple
 
 from .token import Token
 from utils import colors
-from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours
+from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours, is_inside_board
 from utils.utils import lighten_color, print_error, print_green, print_score, print_warning
 
 
@@ -173,9 +173,84 @@ class Board:
                 print_score(self.white_points, self.black_points)
             
         # Change current player
-        self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
+        if not is_winning_move:
+            self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
+            if not self.current_player_has_valid_move():
+                self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
+                print("Player move skipped because there are no valid moves")
 
         return is_winning_move
+    
+    def current_player_has_valid_move(
+            self
+        ) -> bool:
+        has_valid_moves = False
+
+        for position, stack in self.board.items():
+            if not stack:
+                continue
+
+            current_row = position[0]
+            current_column = position[1]
+
+            # If stack has no neighbours
+            if not has_neighbours(self.board, self.board_size, current_row, current_column):
+                # If current players token is on the bottom, the player has a valid move
+                if self.is_token_by_current_player(stack[0]):
+                    has_valid_moves = True
+                    break
+
+            posible_destination_tiles = [
+                (current_row-1, current_column-1),
+                (current_row-1, current_column+1),
+                (current_row+1, current_column+1),
+                (current_row+1, current_column-1),
+            ]
+            has_valid_moves_from_current_position = False
+
+            for posible_destination_tile in posible_destination_tiles:
+                # Check if possible destination tile is inside the board
+                if not is_inside_board(posible_destination_tile, self.board_size):
+                    continue
+                # Check if possible destination tile has a stack
+                destination_stack = self.board[posible_destination_tile]
+                if not destination_stack:
+                    continue
+                # Check if current stack has a token that can be moved to higher level in destination stack
+                if self.has_valid_move_from_current_stack_to_destination_stack(stack, destination_stack):
+                    has_valid_moves_from_current_position = True
+                    break
+                
+            if has_valid_moves_from_current_position:
+                has_valid_moves = True
+                break
+
+        return has_valid_moves
+    
+    def has_valid_move_from_current_stack_to_destination_stack(
+            self, 
+            current_stack,
+            destination_stack
+        ) -> bool:
+        # This function checks if current stack has a token that can be moved to a higher level in destination stack
+        has_valid_move_from_current_position = False
+        for token in current_stack:
+            # Check if token belongs to current player
+            if not self.is_token_by_current_player(token):
+                continue
+            # Check if token would have higher level if moved to destination stack
+            if self.is_destination_level_higher_than_current_level(token, destination_stack):
+                has_valid_move_from_current_position = True
+                break
+
+        return has_valid_move_from_current_position
+    
+    def is_destination_level_higher_than_current_level(
+            self,
+            current_token,
+            destination_stack
+        ) -> bool:
+        return current_token.level <= destination_stack[-1].level
 
     def can_move(
             self,
@@ -183,7 +258,9 @@ class Board:
             destination_column: int
         ) -> bool:
         """
+        !!! SHOULD PROBABLY BE REPLACED WITH is_destination_level_higher_than_current_level FUNCTION IN ITS USE CASESS !!!
         For now, this function is used to check which tiles to highlight as potential destinations
+        This function checks only if selected stack can move to destination based on token levels
         In the furure, this function can be used for all movement constrain checks when moving a stack
         """
         selected_row = self.selected_tokens[0].row
@@ -234,6 +311,9 @@ class Board:
         if has_neighbours(self.board, self.board_size, selected_tile_row, selected_tile_column):
             return not self.is_selected_tile(row, column) and is_neighbour and has_move
         else:
+            # If selected token is not on the bottom, stack can not be moved - no tile highlighted
+            if self.selected_tokens[0].level != 1:
+                return False
             potential_moves = get_potential_moves(self.board, self.board_size, selected_tile_row, selected_tile_column)
             return (row, column) in potential_moves
         
@@ -252,3 +332,9 @@ class Board:
         selected_row = self.selected_tokens[0].row
         selected_column = self.selected_tokens[0].column
         return (selected_row, selected_column) == (row, column)
+    
+    def is_token_by_current_player(
+            self,
+            token: Token
+        ) -> bool:
+        return (token.color == colors.WHITE and self.current_player in ['w', 'W']) or (token.color == colors.BLACK and self.current_player in ['b', 'B'])

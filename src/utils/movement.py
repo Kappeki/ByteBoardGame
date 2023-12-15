@@ -8,8 +8,8 @@ def get_clicked_tile_position(
         y: int, 
         tile_size: int
     ) -> Tuple[int, int]:
-    column = x // tile_size
     row = y // tile_size
+    column = x // tile_size
     return row, column
 
 def are_neighbours(
@@ -27,17 +27,17 @@ def are_neighbours(
 def has_neighbours(
         board_dict: Dict, 
         board_size: int, 
-        selected_row: int, 
-        selected_column: int
+        current_row: int, 
+        current_column: int
     ) -> bool:
     neighbor_positions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 
-    for row_offset, col_offset in neighbor_positions:
-        neighbor_row = selected_row + row_offset
-        neighbor_col = selected_column + col_offset
+    for row_offset, column_offset in neighbor_positions:
+        neighbor_row = current_row + row_offset
+        neighbor_column = current_column + column_offset
         
-        if 0 <= neighbor_row < board_size and 0 <= neighbor_col < board_size:
-            if board_dict.get((neighbor_row, neighbor_col)):
+        if 0 <= neighbor_row < board_size and 0 <= neighbor_column < board_size:
+            if board_dict.get((neighbor_row, neighbor_column)):
                 return True
 
     return False
