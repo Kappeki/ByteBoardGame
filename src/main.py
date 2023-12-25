@@ -97,7 +97,7 @@ if __name__ == '__main__':
         print('Wrong input. Try again!')
         board_size = int(input('Input board size: '))
 
-    # first_player = input('Who is to make the first move [h/c]: ')
+    # first_player = input('Who is to make the first move [w/b]: ')
     first_player = 'w'
     while first_player not in ['w', 'W', 'b', 'B']:
         print('Wrong input. Try again!')

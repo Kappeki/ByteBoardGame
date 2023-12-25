@@ -4,6 +4,7 @@ from .token import Token
 from utils import colors
 from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours, is_inside_board
 from utils.utils import lighten_color, print_error, print_green, print_score, print_warning
+from ai.ai import AI
 
 
 class Board:
@@ -47,10 +48,16 @@ class Board:
 
     def change_clicked_stack_status(
             self, 
-            x: int, 
+            x: int,
             y: int
         ) -> None:
         row, column = get_clicked_tile_position(x, y, self.tile_size)
+
+        # AI
+        ai = AI()
+        moves = ai.get_next_positions(self, self.get_current_player_color())
+        print(len(moves))
+        # AI
 
         if (row, column) in self.board:
             stack = self.board[(row, column)]
@@ -338,3 +345,8 @@ class Board:
             token: Token
         ) -> bool:
         return (token.color == colors.WHITE and self.current_player in ['w', 'W']) or (token.color == colors.BLACK and self.current_player in ['b', 'B'])
+    
+    def get_current_player_color(
+            self
+    ) -> Tuple[int, int, int]:
+        return colors.WHITE if self.current_player in ['w', 'W'] else colors.BLACK

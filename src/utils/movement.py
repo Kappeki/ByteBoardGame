@@ -48,7 +48,7 @@ def is_inside_board(
     ) -> bool:
     return tile[0] >= 0 and tile[1] >= 0 and tile[0] <= board_size-1 and tile[1] <= board_size-1
 
-def find_closest_tiles(
+def find_closest_tiles_with_stacks(
         board_dict: Dict, 
         board_size: int, 
         current_row: int, 
@@ -108,7 +108,7 @@ def find_closest_directions(
     ) -> List[Tuple[int, int]]:
     closest_tiles = []
 
-    closest_tiles = find_closest_tiles(board_dict, board_size, current_row, current_column)
+    closest_tiles = find_closest_tiles_with_stacks(board_dict, board_size, current_row, current_column)
 
     if not closest_tiles:
         return closest_tiles
