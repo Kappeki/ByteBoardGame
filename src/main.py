@@ -6,6 +6,7 @@ from board.board import Board
 from utils.utils import print_score
 from utils.movement import get_clicked_tile_position
 
+# Stefaneeee
 
 def end_game(
         board: Board
