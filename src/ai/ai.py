@@ -10,8 +10,9 @@ class AI:
     ) -> None:
         pass
 
+    # Stefanov kod
     def get_next_positions(
-        self, 
+        self,
         board,
         player_color: Tuple[int, int, int]
     ) -> List[Dict]:
@@ -45,8 +46,10 @@ class AI:
                             continue
                         neighbour_stack = board.board[neighbour_tile]
                         if neighbour_stack and board.is_destination_level_higher_than_current_level(token, neighbour_stack):
-                            new_board = self.ai_move_stack(board.board, position, token.level, neighbour_tile)
-                            potential_positions.append(new_board)
+                            # Dusan dodao samo sl liniju - za proveru da li je rezultujuci stek veci od 8
+                            if len(neighbour_stack) + len(stack) - (token.level - 1) <= 8:
+                                new_board = self.ai_move_stack(board.board, position, token.level, neighbour_tile)
+                                potential_positions.append(new_board)
         return potential_positions
 
     def ai_move_stack(self, board_dict, source_tile, source_token_level, destination_tile):
