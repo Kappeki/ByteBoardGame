@@ -6,7 +6,6 @@ from board.board import Board
 from utils.utils import print_score
 from utils.movement import get_clicked_tile_position
 
-# Stefaneeee
 
 def end_game(
         board: Board
@@ -39,6 +38,8 @@ def handle_mouse_button(
     x, y = event.pos
     if event.button == 1:
         board.change_clicked_stack_status(x, y)
+    elif event.button == 2:
+        board.make_ai_move()
     elif event.button == 3:
         return process_move(board, x, y, tile_size)
     return running
@@ -103,6 +104,8 @@ if __name__ == '__main__':
     while first_player not in ['w', 'W', 'b', 'B']:
         print('Wrong input. Try again!')
         first_player = input('Who is to make the first move [w/b]: ')
+
+    print("Middle click for AI move")
 
     start_game(board_size, first_player)
 
