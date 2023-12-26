@@ -25,6 +25,7 @@ class Board:
         self.board_dark: Tuple[int, int, int] = colors.BROWN
         self.board_light: Tuple[int, int, int] = colors.BEIGE
         self.current_player: Literal['w', 'W', 'b', 'B'] = current_player
+        self.ai = AI()
 
     def change_selected_tokens_status(
             self
@@ -54,15 +55,6 @@ class Board:
     ) -> None:
         row, column = get_clicked_tile_position(x, y, self.tile_size)
 
-        # AI
-        ai = AI()
-        moves = ai.get_next_positions(self, self.get_current_player_color())
-        if self.current_player == 'w' or self.current_player == 'W':
-            print("White has " + str(len(moves)) + " potential moves!")
-        else:
-            print("Black has " + str(len(moves)) + " potential moves!")
-        # AI
-
         if (row, column) in self.board:
             stack = self.board[(row, column)]
             for i in range(len(stack)):
@@ -78,9 +70,7 @@ class Board:
 
                 if token_x_min <= x <= token_x_max and token_y_min <= y <= token_y_max:
                     # Abort if opposite player token has been attempted to select
-                    if self.current_player in ['w', 'W'] and token.color == colors.BLACK:
-                        return
-                    if self.current_player in ['b', 'B'] and token.color == colors.WHITE:
+                    if not self.is_token_by_current_player(token):
                         return
 
                     # Deselect token
@@ -186,9 +176,9 @@ class Board:
 
         # Change current player
         if not is_winning_move:
-            self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
+            self.change_current_player()
             if not self.current_player_has_valid_move():
-                self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
+                self.change_current_player()
                 print("Player move skipped because there are no valid moves")
 
         return is_winning_move
@@ -294,13 +284,6 @@ class Board:
             column: int
     ) -> Tuple[int, int, int]:
 
-        # Originalno sto je odkucao Stefan
-        # base_color = self.get_base_tile_color(row, column)
-        # if self.should_highlight_tile(row, column):
-        #     return lighten_color(base_color)
-        # return base_color
-
-        # Izmena koja omogucava da se ne osencuju komsijska polja gde ukoliko se doda selektovani stek se prelazi 8
         base_color = self.get_base_tile_color(row, column)
 
         destination_tile_tokens_count = len(self.board.get((row, column), []))
@@ -362,10 +345,19 @@ class Board:
             self,
             token: Token
     ) -> bool:
-        return (token.color == colors.WHITE and self.current_player in ['w', 'W']) or (
-                    token.color == colors.BLACK and self.current_player in ['b', 'B'])
+        white_check = token.color == colors.WHITE and self.current_player in ['w', 'W']
+        black_check = token.color == colors.BLACK and self.current_player in ['b', 'B']
+        return white_check or black_check
 
     def get_current_player_color(
             self
     ) -> Tuple[int, int, int]:
         return colors.WHITE if self.current_player in ['w', 'W'] else colors.BLACK
+    
+    def change_current_player(self):
+        self.current_player = 'w' if self.current_player in ['b', 'B'] else 'b'
+    
+    def make_ai_move(self):
+        current_player_color = self.get_current_player_color()
+        self.ai.ai_make_move(self, current_player_color)
+        self.change_current_player()
