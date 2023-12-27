@@ -70,5 +70,3 @@ class AI:
         position = next_positions[0]
         board.board = position
     
-    def board_has_8_token_stack(self, board) -> bool:
-        pass

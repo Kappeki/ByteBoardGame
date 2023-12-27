@@ -1,5 +1,5 @@
 import pygame
-from typing import List, Literal, Tuple
+from typing import List, Tuple
 
 from utils import colors
 from board.board import Board
@@ -18,6 +18,14 @@ class GUI:
             self, 
             board: Board
         ) -> None:
+        """
+        Draws the game board and the tokens on it.
+
+        This function iterates over each tile of the provided game board, drawing the tiles and any 
+        token stacks on them. For each tile, it first determines the tile color and then draws the 
+        tile using Pygame's rectangle drawing functionality. If a stack of tokens is present on a tile, 
+        it calls the `draw_stack` method to render the tokens in that stack.
+        """
         for row in range(board.board_size):
             for column in range(board.board_size):
 
@@ -34,6 +42,13 @@ class GUI:
             stack: List[Token], 
             tile_size: int
         ) -> None:
+        """
+        Draws a stack of tokens on a tile.
+
+        This function iterates through each token in the provided stack and calls the `draw_token` 
+        method to render each token on the screen. The tokens are drawn based on their position in 
+        the stack and the size of the tile they are on.
+        """
         for token in stack:
             self.draw_token(token, tile_size)
 
@@ -42,6 +57,13 @@ class GUI:
             token: Token, 
             tile_size: int
         ) -> None:
+        """
+        Draws an individual token on the board.
+
+        This function calculates the position and size of the token based on its attributes and the tile size.
+        It then draws the token on the board using Pygame, including a border around the token which 
+        varies in thickness based on whether the token is currently selected.
+        """
         tile_padding = (tile_size - token.width) / 2
         token_color = token.color
         token_size = (token.width, token.height)
@@ -65,6 +87,13 @@ class GUI:
             self, 
             token: Token
         ) -> Tuple[int, int, int]:
+        """
+        Determines the border color for a given token.
+
+        This function returns a specific color for the token's border. If the token is selected, it 
+        returns green. If the token is white, it returns black; otherwise, it returns white. This 
+        helps visually differentiate tokens based on their state and color.
+        """
         if token.selected:
             return colors.GREEN
         elif token.color == colors.WHITE:
@@ -74,9 +103,16 @@ class GUI:
 
     def update_caption(
             self, 
-            current_player: Literal['w', 'W', 'b', 'B']
+            current_player_color: Tuple[int, int, int]
         ) -> None:
-        if current_player in ['w', 'W']:
+        """
+        Updates the window caption to indicate the current player's turn.
+
+        This function sets the caption of the Pygame window to reflect whose turn it is based on the 
+        color of the current player. The caption will display 'Byte - WHITE TURN' or 'Byte - BLACK TURN' 
+        accordingly.
+        """
+        if current_player_color == colors.WHITE:
             pygame.display.set_caption('Byte - WHITE TURN')
         else:
             pygame.display.set_caption('Byte - BLACK TURN')

@@ -29,6 +29,13 @@ class Token:
             self, 
             status: Union[bool, None]=None
         ) -> None:
+        """
+        Changes the selected status of the token.
+
+        This function toggles the selected status of the token. If no specific status is provided,
+        it simply inverts the current status. If a specific status (True or False) is provided,
+        the token's selected status is set to that value.
+        """
         if status is None:
             self.selected = not self.selected
         else:
@@ -40,6 +47,13 @@ class Token:
             dest_column: int, 
             dest_level: int
         ) -> None:
+        """
+        Moves the token to a new position on the board.
+
+        This function updates the token's position by setting its row, column, and level to the 
+        specified destination values. This is typically used to reflect the token's new position 
+        after a move in the game.
+        """
         self.row = dest_row
         self.column = dest_column
         self.level = dest_level
@@ -47,4 +61,4 @@ class Token:
     def __repr__(
             self
         ) -> str:
-        return f'id:{self.id};row:{self.row};column:{self.column};level:{self.level}'
+        return f'id:{self.id};row:{self.row};column:{self.column};level:{self.level};'
