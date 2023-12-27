@@ -79,37 +79,39 @@ class Board:
         """
         row, column = get_clicked_tile_position(x, y, self.tile_size)
 
-        if (row, column) in self.board:
-            stack = self.board[(row, column)]
-            for i in range(len(stack)):
-                token = stack[i]
-                tile_padding = (self.tile_size - token.width) / 2
-                token_x = token.column * self.tile_size + tile_padding
-                token_y = (token.row + 1) * self.tile_size - token.height * token.level
+        if (row, column) not in self.board:
+            return
+        
+        stack = self.board[(row, column)]
+        for i in range(len(stack)):
+            token = stack[i]
+            tile_padding = (self.tile_size - token.width) / 2
+            token_x = token.column * self.tile_size + tile_padding
+            token_y = (token.row + 1) * self.tile_size - token.height * token.level
 
-                token_x_min = token_x
-                token_x_max = token_x + token.width
-                token_y_min = token_y
-                token_y_max = token_y + token.height
+            token_x_min = token_x
+            token_x_max = token_x + token.width
+            token_y_min = token_y
+            token_y_max = token_y + token.height
 
-                if token_x_min <= x <= token_x_max and token_y_min <= y <= token_y_max:
-                    # Abort if opposite player token has been attempted to select
-                    if not self.is_token_by_current_player(token):
-                        return
+            if token_x_min <= x <= token_x_max and token_y_min <= y <= token_y_max:
+                # Abort if opposite player token has been attempted to select
+                if not self.is_token_by_current_player(token):
+                    return
 
-                    # If the clicked token is already selected, deselect it
-                    if self.selected_tokens and token == self.selected_tokens[0]:
-                        self.change_selected_tokens_status()
-                        self.selected_tokens = []
-                        return
-                    
-                    # Deselect old tokens
+                # If the clicked token is already selected, deselect it
+                if self.selected_tokens and token == self.selected_tokens[0]:
                     self.change_selected_tokens_status()
                     self.selected_tokens = []
+                    return
+                
+                # Deselect old tokens
+                self.change_selected_tokens_status()
+                self.selected_tokens = []
 
-                    # Select new tokens
-                    self.selected_tokens = [stack[j] for j in range(i, len(stack))]
-                    self.change_selected_tokens_status()
+                # Select new tokens
+                self.selected_tokens = [stack[j] for j in range(i, len(stack))]
+                self.change_selected_tokens_status()
 
     def move_stack(
             self,
@@ -167,7 +169,7 @@ class Board:
 
         # Check if current tile has neighbours
         if has_neighbours(self.board, self.board_size, current_row, current_column):
-            # Check if resulting level is higher than the starting level
+            # Check if token would have higher level if moved to destination stack
             if not self.is_destination_level_higher_than_current_level(self.selected_tokens[0], destination_stack):
                 print_error("You are attempting to move token to lower or equal level")
                 return is_winning_move
@@ -213,51 +215,6 @@ class Board:
         if not is_winning_move:
             self.change_current_player()
 
-        return is_winning_move
-    
-    def handle_full_stack_creation(self, row, column):
-        """
-        Handles the scenario when a full stack of size 8 is created on the board.
-
-        When a stack reaches the maximum size of 8, this function is called to perform several actions:
-        1. Prints a message indicating that a full stack was created.
-        2. Updates the points for the player who completed the stack, based on the color of the top token.
-        3. Removes all tokens from the completed stack.
-        4. Checks for a winner after the stack is completed.
-
-        Returns:
-            bool: True if the completion of the stack results in a winner, False otherwise.
-        """
-        print_green("Stack with size 8 was created")
-        # Update the points
-        if self.board[(row, column)][-1].color == colors.WHITE:
-            self.white_points += 1
-        else:
-            self.black_points += 1
-        # Print the score
-        print_score(self.white_points, self.black_points)
-        # Delete the tokens
-        self.board[(row, column)] = []
-        # Return True if there is a winner, otherwise False
-        return self.check_for_winner()
-    
-    def check_for_winner(
-            self
-        ) -> bool:
-        """
-        Checks if either player has reached the winning point total.
-
-        This function calculates the total number of points required to win the game based on the 
-        size of the board. It then checks if either the white or black player has reached or 
-        surpassed this winning point total. If a player has won, it sets `is_winning_move` to True.
-
-        If no player has won yet, the function prints the current score for both players.
-        """
-        is_winning_move = False
-        max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
-        winning_point = max_points // 2 + 1
-        if self.white_points == winning_point or self.black_points == winning_point:
-            is_winning_move = True
         return is_winning_move
 
     def current_player_has_valid_move(
@@ -305,9 +262,10 @@ class Board:
                 if not destination_stack:
                     continue
                 # Check if current stack has a token that can be moved to higher level in destination stack
-                if self.has_valid_move_from_current_stack_to_destination_stack(stack, destination_stack):
-                    has_valid_moves_from_current_position = True
-                    break
+                if not self.has_valid_move_from_current_stack_to_destination_stack(stack, destination_stack):
+                    continue
+                has_valid_moves_from_current_position = True
+                break
 
             if has_valid_moves_from_current_position:
                 has_valid_moves = True
@@ -329,9 +287,13 @@ class Board:
             if not self.is_token_by_current_player(token):
                 continue
             # Check if token would have higher level if moved to destination stack
-            if self.is_destination_level_higher_than_current_level(token, destination_stack):
-                has_valid_move_from_current_position = True
-                break
+            if not self.is_destination_level_higher_than_current_level(token, destination_stack):
+                continue
+            # Check if resulting stack would have more than 8 tokens
+            if len(current_stack) + len(destination_stack) - (token.level - 1) > 8:
+                continue
+            has_valid_move_from_current_position = True
+            break
 
         return has_valid_move_from_current_position
 
@@ -386,8 +348,8 @@ class Board:
         base_color = self.get_base_tile_color(row, column)
         destination_tile_tokens_count = len(self.board.get((row, column), []))
         selected_stack_tokens_count = len(self.selected_tokens)
-        would_exceed_max_stack_size = (destination_tile_tokens_count + selected_stack_tokens_count) > 8
-        if self.should_highlight_tile(row, column) and not would_exceed_max_stack_size:
+        exceeds_max_stack_size = (destination_tile_tokens_count + selected_stack_tokens_count) > 8
+        if self.should_highlight_tile(row, column) and not exceeds_max_stack_size:
             return lighten_color(base_color)
         return base_color
 
@@ -553,3 +515,48 @@ class Board:
             if len(stack) == 8:
                 return tile
         return None
+    
+    def handle_full_stack_creation(self, row, column):
+        """
+        Handles the scenario when a full stack of size 8 is created on the board.
+
+        When a stack reaches the maximum size of 8, this function is called to perform several actions:
+        1. Prints a message indicating that a full stack was created.
+        2. Updates the points for the player who completed the stack, based on the color of the top token.
+        3. Removes all tokens from the completed stack.
+        4. Checks for a winner after the stack is completed.
+
+        Returns:
+            bool: True if the completion of the stack results in a winner, False otherwise.
+        """
+        print_green("Stack with size 8 was created")
+        # Update the points
+        if self.board[(row, column)][-1].color == colors.WHITE:
+            self.white_points += 1
+        else:
+            self.black_points += 1
+        # Print the score
+        print_score(self.white_points, self.black_points)
+        # Delete the tokens
+        self.board[(row, column)] = []
+        # Return True if there is a winner, otherwise False
+        return self.check_for_winner()
+    
+    def check_for_winner(
+            self
+        ) -> bool:
+        """
+        Checks if either player has reached the winning point total.
+
+        This function calculates the total number of points required to win the game based on the 
+        size of the board. It then checks if either the white or black player has reached or 
+        surpassed this winning point total. If a player has won, it sets `is_winning_move` to True.
+
+        If no player has won yet, the function prints the current score for both players.
+        """
+        is_winning_move = False
+        max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
+        winning_point = max_points // 2 + 1
+        if self.white_points == winning_point or self.black_points == winning_point:
+            is_winning_move = True
+        return is_winning_move

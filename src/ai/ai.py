@@ -41,13 +41,19 @@ class AI:
                 # Has neighbours
                 if token.color == player_color and tile_has_neighbours:
                     for neighbour_tile in neighbour_tiles:
+                        # Check if neighbour tile is inside the board
                         if not is_inside_board(neighbour_tile, board.board_size):
                             continue
                         neighbour_stack = board.board[neighbour_tile]
-                        if neighbour_stack and board.is_destination_level_higher_than_current_level(token, neighbour_stack):
-                            if len(neighbour_stack) + len(stack) - (token.level - 1) <= 8:
-                                new_board = self.ai_move_stack(board, tile, token.level, neighbour_tile)
-                                potential_positions.append(new_board)
+                        # Check if token would have higher level if moved to destination stack
+                        if not neighbour_stack or not board.is_destination_level_higher_than_current_level(token, neighbour_stack):
+                            continue
+                        # Check if resulting stack would have more than 8 tokens
+                        if len(neighbour_stack) + len(stack) - (token.level - 1) > 8:
+                            continue
+                        new_board = self.ai_move_stack(board, tile, token.level, neighbour_tile)
+                        potential_positions.append(new_board)
+
         return potential_positions
 
     def ai_move_stack(self, board, source_tile, source_token_level, destination_tile) -> Dict[Tuple[int, int], List[Token]]:
@@ -67,6 +73,7 @@ class AI:
     
     def ai_make_move(self, board, player_color: Tuple[int, int, int] ) -> None:
         next_positions = self.ai_get_next_positions(board, player_color)
+        print(f"AI detected {len(next_positions)} possible next positions and chose 1")
         position = next_positions[0]
         board.board = position
     
