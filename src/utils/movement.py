@@ -8,6 +8,9 @@ def get_clicked_tile_position(
         y: int, 
         tile_size: int
     ) -> Tuple[int, int]:
+    """
+    Calculates the row and column indices of a tile based on clicked screen coordinates.
+    """
     row = y // tile_size
     column = x // tile_size
     return row, column
@@ -16,6 +19,9 @@ def are_neighbours(
         source_tile: Tuple[int, int], 
         destination_tile: Tuple[int, int]
     ) -> bool:
+    """
+    Checks if two tiles are neighbours on the board.
+    """
     if source_tile == destination_tile:
         return False
     x_distance = abs(destination_tile[1] - source_tile[1])
@@ -30,6 +36,9 @@ def has_neighbours(
         current_row: int, 
         current_column: int
     ) -> bool:
+    """
+    Determines if a given tile has any neighbouring tiles with stacks on the board.
+    """
     neighbor_positions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 
     for row_offset, column_offset in neighbor_positions:
@@ -46,6 +55,9 @@ def is_inside_board(
         tile: Tuple[int, int],
         board_size: int
     ) -> bool:
+    """
+    Checks if a tile position is within the boundaries of the board.
+    """
     return tile[0] >= 0 and tile[1] >= 0 and tile[0] <= board_size-1 and tile[1] <= board_size-1
 
 def find_closest_tiles_with_stacks(
@@ -54,6 +66,9 @@ def find_closest_tiles_with_stacks(
         current_row: int, 
         current_column: int
     ) -> List[Tuple[int, int]]:
+    """
+    Finds the closest tiles with stacks to a given tile in a diagonal direction.
+    """
     left_tile = (current_row-1, current_column-1)
     right_tile = (current_row+1, current_column+1)
     found = False
@@ -106,6 +121,9 @@ def find_closest_directions(
         current_row: int, 
         current_column: int
     ) -> List[Tuple[int, int]]:
+    """
+    Identifies the directions to the closest tiles with stacks from a given tile.
+    """
     closest_tiles = []
 
     closest_tiles = find_closest_tiles_with_stacks(board_dict, board_size, current_row, current_column)
@@ -139,6 +157,9 @@ def get_potential_moves(
         selected_row: int, 
         selected_column: int
     ) -> List[Tuple[int, int]]:
+    """
+    Calculates potential move positions for a selected stack based on the closest stacks in each direction.
+    """
     closest_directions = find_closest_directions(board_dict, board_size, selected_row, selected_column)
     potential_moves = [
         add_tuples((selected_row, selected_column), direction)
