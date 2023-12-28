@@ -166,3 +166,12 @@ def get_potential_moves(
         for direction in closest_directions
     ]
     return potential_moves
+
+def is_destination_level_higher_than_current_level(
+        current_token,
+        destination_stack
+    ) -> bool:
+    """
+    Checks if the level of the last token in the destination stack is higher than or equal to the level of the current token.
+    """
+    return current_token.level <= len(destination_stack)

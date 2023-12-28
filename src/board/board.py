@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 
 from .token import Token
 from utils import colors
-from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours, is_inside_board
+from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours, is_destination_level_higher_than_current_level, is_inside_board
 from utils.utils import lighten_color, print_error, print_green, print_score, print_warning
 from ai.ai import AI
 
@@ -170,7 +170,7 @@ class Board:
         # Check if current tile has neighbours
         if has_neighbours(self.board, self.board_size, current_row, current_column):
             # Check if token would have higher level if moved to destination stack
-            if not self.is_destination_level_higher_than_current_level(self.selected_tokens[0], destination_stack):
+            if not is_destination_level_higher_than_current_level(self.selected_tokens[0], destination_stack):
                 print_error("You are attempting to move token to lower or equal level")
                 return is_winning_move
         else:
@@ -287,7 +287,7 @@ class Board:
             if not self.is_token_by_current_player(token):
                 continue
             # Check if token would have higher level if moved to destination stack
-            if not self.is_destination_level_higher_than_current_level(token, destination_stack):
+            if not is_destination_level_higher_than_current_level(token, destination_stack):
                 continue
             # Check if resulting stack would have more than 8 tokens
             if len(current_stack) + len(destination_stack) - (token.level - 1) > 8:
@@ -297,15 +297,7 @@ class Board:
 
         return has_valid_move_from_current_position
 
-    def is_destination_level_higher_than_current_level(
-            self,
-            current_token,
-            destination_stack
-        ) -> bool:
-        """
-        Checks if the level of the last token in the destination stack is higher than or equal to the level of the current token.
-        """
-        return current_token.level <= len(destination_stack)
+    
 
     # If everything works, delete this method
     # def can_move(
@@ -491,8 +483,8 @@ class Board:
         self.selected_tokens = []
 
         # Make a move
-        current_player_color = self.get_current_player_color()
-        self.ai.ai_make_move(self, current_player_color)
+        new_board = self.ai.ai_make_move(self.board, self.board_size, self.current_player)
+        self.board = new_board
 
         # Check if stack of size 8 has been created
         full_stack_tile = self.get_full_stack_tile()
