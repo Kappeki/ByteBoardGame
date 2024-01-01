@@ -483,8 +483,14 @@ class Board:
         self.selected_tokens = []
 
         # Make a move
-        new_board = self.ai.ai_make_move(self.board, self.board_size, self.current_player)
-        self.board = new_board
+        is_one_stack_left = True if self.get_num_of_remaining_stacks() == 1 else False
+        new_board = self.ai.ai_make_move(self.board, self.board_size, self.current_player, is_one_stack_left)
+
+        source_tile = new_board[0]
+        token_level = new_board[1]
+        destination_tile = new_board[2]
+
+        self.ai.ai_move_stack(self.board, source_tile, token_level, destination_tile)
 
         # Check if stack of size 8 has been created
         full_stack_tile = self.get_full_stack_tile()
@@ -499,6 +505,10 @@ class Board:
             self.change_current_player()
 
         return is_winning_move
+    
+    def get_num_of_remaining_stacks(self):
+        max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
+        return max_points - (self.white_points + self.black_points)
     
     def get_full_stack_tile(self) -> Tuple[int, int]:
         for tile, stack in self.board.items():

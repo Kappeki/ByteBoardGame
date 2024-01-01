@@ -18,13 +18,28 @@ class AI:
             self,
             board_dict,
             board_size,
-            player_color: Tuple[int, int, int]
-        ) -> List[Dict]:
-        potential_positions = []
+            player_color: Tuple[int, int, int],
+            is_one_stack_left
+        ) -> List[Dict[Tuple[int, int], List[Token]]]:
+        """
+        Generates a list of potential board configurations after one move, 
+        given the current state of the board and the player's color.
+
+        This method iterates through all the stacks on the board. For each stack, it determines 
+        if a move is possible based on the current player's color and the surrounding tiles. 
+        If a move is possible, the method simulates the move, resulting in a new board configuration, 
+        which is then added to the list of potential positions.
+
+        Returns:
+            A list of dictionaries representing the board configurations after each potential move.
+            Each dictionary is similar in structure to board_dict, with the move applied.
+        """
+        next_positions = []
 
         for tile, stack in board_dict.items():
             if not stack:
                 continue
+
             tile_has_neighbours = has_neighbours(board_dict, board_size, tile[0], tile[1])
             neighbour_tiles = [
                         (tile[0]-1, tile[1]-1),
@@ -35,30 +50,70 @@ class AI:
 
             for token in stack:
                 # Has no neighbours
-                if token.level == 1 and token.color == player_color and (not tile_has_neighbours):
+                if token.level == 1 and token.color == player_color and not tile_has_neighbours:
                     potential_moves = get_potential_moves(board_dict, board_size, tile[0], tile[1])
                     for potential_tile in potential_moves:
+                        # Check if potential tile is inside the board
                         if not is_inside_board(potential_tile, board_size):
                             continue
-                        new_board = self.ai_move_stack(board_dict, tile, token.level, potential_tile)
-                        potential_positions.append(new_board)
+
+                        potential_tile_stack = board_dict[potential_tile]
+                        
+                        # Save which token level will need to be reverted
+                        revert_level = len(potential_tile_stack) + 1
+                        
+                        # Change the state
+                        board_dict = self.ai_move_stack(board_dict, tile, token.level, potential_tile)
+
+                        # Check if it's the last stack
+                        if is_one_stack_left and len(potential_tile_stack) + len(stack) - (token.level - 1) == 8:
+                            position_status = True
+                        else:
+                            position_status = False
+
+                        # Revert the state
+                        board_dict = self.ai_move_stack(board_dict, potential_tile, revert_level, tile)
+
+                        next_positions.append((position_status, (tile, token.level, potential_tile, revert_level)))
+
                 # Has neighbours
                 if token.color == player_color and tile_has_neighbours:
                     for neighbour_tile in neighbour_tiles:
                         # Check if neighbour tile is inside the board
                         if not is_inside_board(neighbour_tile, board_size):
                             continue
+
                         neighbour_stack = board_dict[neighbour_tile]
+
+                        # Save which token level will need to be reverted
+                        revert_level = len(neighbour_stack) + 1
+
                         # Check if token would have higher level if moved to destination stack
                         if not neighbour_stack or not is_destination_level_higher_than_current_level(token, neighbour_stack):
                             continue
+
                         # Check if resulting stack would have more than 8 tokens
                         if len(neighbour_stack) + len(stack) - (token.level - 1) > 8:
                             continue
-                        new_board = self.ai_move_stack(board_dict, tile, token.level, neighbour_tile)
-                        potential_positions.append(new_board)
 
-        return potential_positions
+                        # Save which token level will need to be reverted
+                        revert_level = len(neighbour_stack) + 1
+
+                        # Change the state
+                        board_dict = self.ai_move_stack(board_dict, tile, token.level, neighbour_tile)
+
+                        # Check if the last stack formed
+                        if is_one_stack_left and len(neighbour_stack) + len(stack) - (token.level - 1) == 8:
+                            position_status = True
+                        else:
+                            position_status = False
+
+                        # Revert the state
+                        board_dict = self.ai_move_stack(board_dict, neighbour_tile, revert_level, tile)
+                        
+                        next_positions.append((position_status, (tile, token.level, neighbour_tile, revert_level)))
+
+        return next_positions
 
     def ai_move_stack(
             self, 
@@ -67,7 +122,19 @@ class AI:
             source_token_level: int, 
             destination_tile: Tuple[int, int]
         ) -> Dict[Tuple[int, int], List[Token]]:
-        new_board = copy.deepcopy(board_dict)
+        """
+        Simulates the movement of a stack of tokens from a source tile to a destination tile on the board.
+
+        This function creates a deep copy of the current board state and then moves a specified 
+        number of tokens from the source tile to the destination tile. The movement respects the 
+        rules of the game, such as token stacking order and maximum stack height.
+
+        Returns:
+            A new dictionary representing the state of the board after the move. This dictionary 
+            has the same structure as board_dict but reflects the changes after the move.
+        """
+        # new_board = copy.deepcopy(board_dict)
+        new_board = board_dict
         source_token_index = source_token_level - 1
         destination_max_level = len(new_board[destination_tile])
 
@@ -85,129 +152,61 @@ class AI:
             self, 
             board_dict,
             board_size,
-            current_player_color
+            current_player_color,
+            is_one_stack_left
         ) -> None:
 
         is_maximizing_player = current_player_color == colors.WHITE
-        print('Starting minimax algorithm...')
-        # board_dict = {
-        #     (0,0): [],
-        #     (0,2): [],
-        #     (0,4): [],
-        #     (0,6): [],
-        #     (1,1): [],
-        #     (1,3): [
-        #         Token(1,3,colors.BLACK, 80, 20, 1),
-        #         Token(1,3,colors.WHITE, 80, 20, 2),
-        #         Token(1,3,colors.BLACK, 80, 20, 3),
-        #         Token(1,3,colors.WHITE, 80, 20, 4),
-        #         Token(1,3,colors.WHITE, 80, 20, 5),
-        #         ],
-        #     (1,5): [],
-        #     (1,7): [],
-
-        #     (2,0): [],
-        #     (2,2): [],
-        #     (2,4): [],
-        #     (2,6): [],
-        #     (3,1): [],
-        #     (3,3): [],
-        #     (3,5): [],
-        #     (3,7): [],
-
-        #     (4,0): [],
-        #     (4,2): [],
-        #     (4,4): [],
-        #     (4,6): [Token(4,6,colors.BLACK, 80, 20, 1)],
-        #     (5,1): [],
-        #     (5,3): [],
-        #     (5,5): [],
-        #     (5,7): [
-        #         Token(5,7,colors.WHITE, 80, 20, 1),
-        #         Token(5,7,colors.BLACK, 80, 20, 2),
-        #     ],
-
-        #     (6,0): [],
-        #     (6,2): [],
-        #     (6,4): [],
-        #     (6,6): [],
-        #     (7,1): [],
-        #     (7,3): [],
-        #     (7,5): [],
-        #     (7,7): [],
-        # }
-        best_heuristic_value, best_move = self.minimax(board_dict, board_size, 3, is_maximizing_player)
-        print(f'Best heuristic value found for this position: {best_heuristic_value}')
+        print('AI is thinking...', end=' ', flush=True)
+        best_heuristic_value, best_move = self.minimax(board_dict, board_size, 3, is_maximizing_player, is_one_stack_left)
+        print(f'H = {best_heuristic_value}')
 
         return best_move
 
-    # Plain minimax algorithm
-    # def minimax(
-    #         self, 
-    #         board_dict,
-    #         board_size,
-    #         depth,
-    #         is_maximizing_player
-    #     ) -> Tuple[int, Dict[Tuple[int, int], List[Token]]]:
-    #     if depth == 0 or final_stack(board_dict):
-    #         return self.heuristic(board_dict, board_size), None
-
-    #     # Determine the color of the opponent based on the current player color
-    #     player_color = colors.WHITE if is_maximizing_player else colors.BLACK
-    #     best_move = board_dict
-    #     next_positions = self.ai_get_next_positions(board_dict, board_size, player_color)
-
-    #     if len(next_positions) == 0:
-    #         return 0, None
-
-    #     if is_maximizing_player:
-    #         best_value = float('-inf')
-    #         for new_board in next_positions:
-    #             heuristic_value, _ = self.minimax(new_board, board_size, depth - 1, False)
-
-    #             if heuristic_value > best_value:
-    #                 best_value = heuristic_value
-    #                 best_move = new_board
-
-    #         return best_value, best_move
-        
-    #     else:
-    #         best_value = float('inf')
-    #         for new_board in next_positions:
-    #             heuristic_value, _ = self.minimax(new_board, board_size, depth - 1, True)
-    #             if heuristic_value < best_value:
-    #                 best_value = heuristic_value
-    #                 best_move = new_board
-
-    #         return best_value, best_move
-
     def minimax(
             self, 
-            board_dict,
-            board_size,
-            depth,
-            is_maximizing_player,
+            board_dict: Dict[Tuple[int, int], List[Token]],
+            board_size: int,
+            depth: int,
+            is_maximizing_player: bool,
+            is_one_stack_left: bool,
             alpha=float('-inf'), 
             beta=float('inf')
         ) -> Tuple[int, Dict[Tuple[int, int], List[Token]]]:
-        if depth == 0 or final_stack(board_dict):
+        # if depth == 0 or final_stack(board_dict):
+        if depth == 0:
             return self.heuristic(board_dict, board_size), board_dict
 
         player_color = colors.WHITE if is_maximizing_player else colors.BLACK
         best_move = board_dict
-        next_positions = self.ai_get_next_positions(board_dict, board_size, player_color)
+        next_positions = self.ai_get_next_positions(board_dict, board_size, player_color, is_one_stack_left)
 
         if len(next_positions) == 0:
             return self.heuristic(board_dict, board_size), board_dict
 
         if is_maximizing_player:
             best_value = float('-inf')
-            for new_board in next_positions:
-                heuristic_value, _ = self.minimax(new_board, board_size, depth - 1, False, alpha, beta)
+            for next_position in next_positions:
+                next_position_is_final = next_position[0]
+                next_board_instructions = next_position[1]
+
+                source_tile = next_board_instructions[0]
+                token_level = next_board_instructions[1]
+                destination_tile = next_board_instructions[2]
+                token_revert_level = next_board_instructions[3]
+
+                next_board = self.ai_move_stack(board_dict, source_tile, token_level-1, destination_tile)
+
+                if next_position_is_final:
+                    heuristic_value = self.heuristic(next_board, board_size)
+                else:
+                    heuristic_value, _ = self.minimax(next_board, board_size, depth - 1, False, is_one_stack_left, alpha, beta)
 
                 if heuristic_value > best_value:
                     best_value = heuristic_value
-                    best_move = new_board
+                    best_move = next_board_instructions
+
+                next_board = self.ai_move_stack(board_dict, destination_tile, token_revert_level, source_tile)
 
                 alpha = max(alpha, best_value)
                 if beta <= alpha:
@@ -217,12 +216,27 @@ class AI:
         
         else:
             best_value = float('inf')
-            for new_board in next_positions:
-                heuristic_value, _ = self.minimax(new_board, board_size, depth - 1, True, alpha, beta)
+            for next_position in next_positions:
+                next_position_is_final = next_position[0]
+                next_board_instructions = next_position[1]
+
+                source_tile = next_board_instructions[0]
+                token_level = next_board_instructions[1]
+                destination_tile = next_board_instructions[2]
+                token_revert_level = next_board_instructions[3]
+
+                next_board = self.ai_move_stack(board_dict, source_tile, token_level, destination_tile)
+
+                if next_position_is_final:
+                    heuristic_value = self.heuristic(next_board, board_size)
+                else:
+                    heuristic_value, _ = self.minimax(next_board, board_size, depth - 1, True, is_one_stack_left, alpha, beta)
 
                 if heuristic_value < best_value:
                     best_value = heuristic_value
-                    best_move = new_board
+                    best_move = next_board_instructions
+
+                next_board = self.ai_move_stack(board_dict, destination_tile, token_revert_level, source_tile)
 
                 beta = min(beta, best_value)
                 if beta <= alpha:
@@ -232,14 +246,23 @@ class AI:
 
     def heuristic(
             self, 
-            board_dict,
-            board_size
-        ):
+            board_dict: Dict[Tuple[int, int], List[Token]],
+            board_size: int
+        ) -> int:
         score = 0
+        white_tokens = 0
+        black_tokens = 0
 
         for tile, stack in board_dict.items():
             if not stack:
                 continue
+
+            # Count the tokens on the stack
+            for token in stack:
+                if token.color == colors.WHITE:
+                    white_tokens += 2 
+                else:
+                    black_tokens += 2
 
             # Stack Height Value
             stack_height = len(stack)
@@ -256,12 +279,14 @@ class AI:
             if self.is_center(tile, board_size):
                 center_control_score = 5 if stack[-1].color == colors.WHITE else -5
 
-            # Check for 8-token stack and add 50 points to the owner
+            # Check for 8-token stack and add 100 points to the owner
             eight_token_stack_score = 0
             if stack_height == 8:
-                eight_token_stack_score = 50 if stack[-1].color == colors.WHITE else -50                
+                eight_token_stack_score = 100 if stack[-1].color == colors.WHITE else -100                
 
             score += stack_height_score + mobility_score + center_control_score + eight_token_stack_score
+
+        score += white_tokens - black_tokens
         
         return score
 
