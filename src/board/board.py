@@ -63,6 +63,55 @@ class Board:
             if (row % 2 == column % 2)
         }
 
+        # self.board = {
+        #         (0,0): [],
+        #         (0,2): [],
+        #         (0,4): [],
+        #         (0,6): [],
+        #         (1,1): [],
+        #         (1,3): [],
+        #         (1,5): [],
+        #         (1,7): [],
+
+        #         (2,0): [],
+        #         (2,2): [],
+        #         (2,4): [],
+        #         (2,6): [],
+        #         (3,1): [],
+        #         (3,3): [
+        #             Token(3,3,colors.WHITE, 80, 20, 1),
+        #             Token(3,3,colors.WHITE, 80, 20, 2),
+        #             Token(3,3,colors.BLACK, 80, 20, 3),
+        #             Token(3,3,colors.WHITE, 80, 20, 4),
+        #             Token(3,3,colors.BLACK, 80, 20, 5),
+        #         ],
+        #         (3,5): [],
+        #         (3,7): [],
+
+        #         (4,0): [],
+        #         (4,2): [],
+        #         (4,4): [],
+        #         (4,6): [],
+        #         (5,1): [],
+        #         (5,3): [],
+        #         (5,5): [
+        #             Token(5,5,colors.WHITE, 80, 20, 1),
+        #             Token(5,5,colors.BLACK, 80, 20, 2),
+        #             Token(5,5,colors.BLACK, 80, 20, 3),
+        #             ],
+        #         (5,7): [],
+
+        #         (6,0): [],
+        #         (6,2): [],
+        #         (6,4): [],
+        #         (6,6): [],
+        #         (7,1): [],
+        #         (7,3): [],
+        #         (7,5): [],
+        #         (7,7): []
+        #     }
+
+
     def change_clicked_stack_status(
             self,
             x: int,
@@ -465,7 +514,8 @@ class Board:
         self.current_player = colors.BLACK if self.current_player == colors.WHITE else colors.WHITE
         if not self.current_player_has_valid_move():
             self.current_player = colors.BLACK if self.current_player == colors.WHITE else colors.WHITE
-            print("Player move skipped because there are no valid moves")
+            skipped_player_color_name = 'White' if self.current_player == colors.BLACK else 'Black'
+            print(f"{skipped_player_color_name} move skipped because there are no valid moves")
     
     def make_ai_move(
             self
@@ -486,11 +536,12 @@ class Board:
         is_one_stack_left = True if self.get_num_of_remaining_stacks() == 1 else False
         new_board = self.ai.ai_make_move(self.board, self.board_size, self.current_player, is_one_stack_left)
 
-        source_tile = new_board[0]
-        token_level = new_board[1]
-        destination_tile = new_board[2]
-
-        self.ai.ai_move_stack(self.board, source_tile, token_level, destination_tile)
+        # If new_board is None, then AI should skip a move
+        if new_board:
+            source_tile = new_board[0]
+            token_level = new_board[1]
+            destination_tile = new_board[2]
+            self.ai.ai_move_stack(self.board, source_tile, token_level, destination_tile)
 
         # Check if stack of size 8 has been created
         full_stack_tile = self.get_full_stack_tile()

@@ -178,11 +178,19 @@ class AI:
             return self.heuristic(board_dict, board_size), board_dict
 
         player_color = colors.WHITE if is_maximizing_player else colors.BLACK
-        best_move = board_dict
+        best_move = None
         next_positions = self.ai_get_next_positions(board_dict, board_size, player_color, is_one_stack_left)
 
         if len(next_positions) == 0:
-            return self.heuristic(board_dict, board_size), board_dict
+            heuristic_value, _ = self.minimax(board_dict, board_size, depth - 1, not is_maximizing_player, is_one_stack_left, alpha, beta)
+            if is_maximizing_player:
+                if heuristic_value > float('-inf'):
+                    best_value = heuristic_value
+            else:
+                if heuristic_value < float('inf'):
+                    best_value = heuristic_value
+            return best_value, best_move
+        
 
         if is_maximizing_player:
             best_value = float('-inf')
@@ -195,7 +203,7 @@ class AI:
                 destination_tile = next_board_instructions[2]
                 token_revert_level = next_board_instructions[3]
 
-                next_board = self.ai_move_stack(board_dict, source_tile, token_level-1, destination_tile)
+                next_board = self.ai_move_stack(board_dict, source_tile, token_level, destination_tile)
 
                 if next_position_is_final:
                     heuristic_value = self.heuristic(next_board, board_size)
@@ -260,13 +268,13 @@ class AI:
             # Count the tokens on the stack
             for token in stack:
                 if token.color == colors.WHITE:
-                    white_tokens += 2 
+                    white_tokens += 1
                 else:
-                    black_tokens += 2
+                    black_tokens += 1
 
             # Stack Height Value
             stack_height = len(stack)
-            stack_height_score = 2 ** (stack_height - 1)
+            stack_height_score = 2 * (stack_height - 1)
             stack_height_score = stack_height_score if stack[-1].color == colors.WHITE else -stack_height_score
 
             # Mobility Score
@@ -277,7 +285,7 @@ class AI:
             # Control of Center
             center_control_score = 0
             if self.is_center(tile, board_size):
-                center_control_score = 5 if stack[-1].color == colors.WHITE else -5
+                center_control_score = 2 if stack[-1].color == colors.WHITE else -2
 
             # Check for 8-token stack and add 100 points to the owner
             eight_token_stack_score = 0
