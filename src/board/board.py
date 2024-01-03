@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 
 from .token import Token
 from utils import colors
-from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours, is_inside_board
+from utils.movement import get_clicked_tile_position, are_neighbours, get_potential_moves, has_neighbours, is_destination_level_higher_than_current_level, is_inside_board
 from utils.utils import lighten_color, print_error, print_green, print_score, print_warning
 from ai.ai import AI
 
@@ -62,6 +62,55 @@ class Board:
             for column in range(self.board_size)
             if (row % 2 == column % 2)
         }
+
+        # self.board = {
+        #         (0,0): [],
+        #         (0,2): [],
+        #         (0,4): [],
+        #         (0,6): [],
+        #         (1,1): [],
+        #         (1,3): [],
+        #         (1,5): [],
+        #         (1,7): [],
+
+        #         (2,0): [],
+        #         (2,2): [],
+        #         (2,4): [],
+        #         (2,6): [],
+        #         (3,1): [],
+        #         (3,3): [
+        #             Token(3,3,colors.WHITE, 80, 20, 1),
+        #             Token(3,3,colors.WHITE, 80, 20, 2),
+        #             Token(3,3,colors.BLACK, 80, 20, 3),
+        #             Token(3,3,colors.WHITE, 80, 20, 4),
+        #             Token(3,3,colors.BLACK, 80, 20, 5),
+        #         ],
+        #         (3,5): [],
+        #         (3,7): [],
+
+        #         (4,0): [],
+        #         (4,2): [],
+        #         (4,4): [],
+        #         (4,6): [],
+        #         (5,1): [],
+        #         (5,3): [],
+        #         (5,5): [
+        #             Token(5,5,colors.WHITE, 80, 20, 1),
+        #             Token(5,5,colors.BLACK, 80, 20, 2),
+        #             Token(5,5,colors.BLACK, 80, 20, 3),
+        #             ],
+        #         (5,7): [],
+
+        #         (6,0): [],
+        #         (6,2): [],
+        #         (6,4): [],
+        #         (6,6): [],
+        #         (7,1): [],
+        #         (7,3): [],
+        #         (7,5): [],
+        #         (7,7): []
+        #     }
+
 
     def change_clicked_stack_status(
             self,
@@ -170,7 +219,7 @@ class Board:
         # Check if current tile has neighbours
         if has_neighbours(self.board, self.board_size, current_row, current_column):
             # Check if token would have higher level if moved to destination stack
-            if not self.is_destination_level_higher_than_current_level(self.selected_tokens[0], destination_stack):
+            if not is_destination_level_higher_than_current_level(self.selected_tokens[0], destination_stack):
                 print_error("You are attempting to move token to lower or equal level")
                 return is_winning_move
         else:
@@ -287,7 +336,7 @@ class Board:
             if not self.is_token_by_current_player(token):
                 continue
             # Check if token would have higher level if moved to destination stack
-            if not self.is_destination_level_higher_than_current_level(token, destination_stack):
+            if not is_destination_level_higher_than_current_level(token, destination_stack):
                 continue
             # Check if resulting stack would have more than 8 tokens
             if len(current_stack) + len(destination_stack) - (token.level - 1) > 8:
@@ -297,15 +346,7 @@ class Board:
 
         return has_valid_move_from_current_position
 
-    def is_destination_level_higher_than_current_level(
-            self,
-            current_token,
-            destination_stack
-        ) -> bool:
-        """
-        Checks if the level of the last token in the destination stack is higher than or equal to the level of the current token.
-        """
-        return current_token.level <= len(destination_stack)
+    
 
     # If everything works, delete this method
     # def can_move(
@@ -473,7 +514,8 @@ class Board:
         self.current_player = colors.BLACK if self.current_player == colors.WHITE else colors.WHITE
         if not self.current_player_has_valid_move():
             self.current_player = colors.BLACK if self.current_player == colors.WHITE else colors.WHITE
-            print("Player move skipped because there are no valid moves")
+            skipped_player_color_name = 'White' if self.current_player == colors.BLACK else 'Black'
+            print(f"{skipped_player_color_name} move skipped because there are no valid moves")
     
     def make_ai_move(
             self
@@ -491,8 +533,15 @@ class Board:
         self.selected_tokens = []
 
         # Make a move
-        current_player_color = self.get_current_player_color()
-        self.ai.ai_make_move(self, current_player_color)
+        is_one_stack_left = True if self.get_num_of_remaining_stacks() == 1 else False
+        new_board = self.ai.ai_make_move(self.board, self.board_size, self.current_player, is_one_stack_left)
+
+        # If new_board is None, then AI should skip a move
+        if new_board:
+            source_tile = new_board[0]
+            token_level = new_board[1]
+            destination_tile = new_board[2]
+            self.ai.ai_move_stack(self.board, source_tile, token_level, destination_tile)
 
         # Check if stack of size 8 has been created
         full_stack_tile = self.get_full_stack_tile()
@@ -507,6 +556,10 @@ class Board:
             self.change_current_player()
 
         return is_winning_move
+    
+    def get_num_of_remaining_stacks(self):
+        max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
+        return max_points - (self.white_points + self.black_points)
     
     def get_full_stack_tile(self) -> Tuple[int, int]:
         for tile, stack in self.board.items():

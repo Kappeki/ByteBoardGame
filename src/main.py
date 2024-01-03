@@ -1,5 +1,5 @@
 import pygame
-from typing import Literal, Tuple, Dict
+from typing import Tuple
 
 from display.gui import GUI
 from board.board import Board
@@ -27,6 +27,7 @@ def process_move(
         print_end_game(board)
         return False
     return True
+    
 
 def process_ai_move(
         board: Board
@@ -36,6 +37,7 @@ def process_ai_move(
         print_end_game(board)
         return False
     return True
+
 
 def handle_mouse_button(
         event: pygame.event.Event, 
