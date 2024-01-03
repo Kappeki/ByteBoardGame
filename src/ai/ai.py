@@ -22,12 +22,12 @@ class AI:
             is_one_stack_left
         ) -> List[Dict[Tuple[int, int], List[Token]]]:
         """
-        Generates a list of potential board configurations after one move, 
+        Generates a list of potential board configurations after one move,
         given the current state of the board and the player's color.
 
-        This method iterates through all the stacks on the board. For each stack, it determines 
-        if a move is possible based on the current player's color and the surrounding tiles. 
-        If a move is possible, the method simulates the move, resulting in a new board configuration, 
+        This method iterates through all the stacks on the board. For each stack, it determines
+        if a move is possible based on the current player's color and the surrounding tiles.
+        If a move is possible, the method simulates the move, resulting in a new board configuration,
         which is then added to the list of potential positions.
 
         Returns:
@@ -58,10 +58,10 @@ class AI:
                             continue
 
                         potential_tile_stack = board_dict[potential_tile]
-                        
+
                         # Save which token level will need to be reverted
                         revert_level = len(potential_tile_stack) + 1
-                        
+
                         # Change the state
                         board_dict = self.ai_move_stack(board_dict, tile, token.level, potential_tile)
 
@@ -110,27 +110,27 @@ class AI:
 
                         # Revert the state
                         board_dict = self.ai_move_stack(board_dict, neighbour_tile, revert_level, tile)
-                        
+
                         next_positions.append((position_status, (tile, token.level, neighbour_tile, revert_level)))
 
         return next_positions
 
     def ai_move_stack(
-            self, 
-            board_dict, 
-            source_tile: Tuple[int, int], 
-            source_token_level: int, 
+            self,
+            board_dict,
+            source_tile: Tuple[int, int],
+            source_token_level: int,
             destination_tile: Tuple[int, int]
         ) -> Dict[Tuple[int, int], List[Token]]:
         """
         Simulates the movement of a stack of tokens from a source tile to a destination tile on the board.
 
-        This function creates a deep copy of the current board state and then moves a specified 
-        number of tokens from the source tile to the destination tile. The movement respects the 
+        This function creates a deep copy of the current board state and then moves a specified
+        number of tokens from the source tile to the destination tile. The movement respects the
         rules of the game, such as token stacking order and maximum stack height.
 
         Returns:
-            A new dictionary representing the state of the board after the move. This dictionary 
+            A new dictionary representing the state of the board after the move. This dictionary
             has the same structure as board_dict but reflects the changes after the move.
         """
         # new_board = copy.deepcopy(board_dict)
@@ -147,9 +147,9 @@ class AI:
         new_board[source_tile] = new_board[source_tile][:source_token_index]
 
         return new_board
-    
+
     def ai_make_move(
-            self, 
+            self,
             board_dict,
             board_size,
             current_player_color,
@@ -164,20 +164,21 @@ class AI:
         return best_move
 
     def minimax(
-            self, 
+            self,
             board_dict: Dict[Tuple[int, int], List[Token]],
             board_size: int,
             depth: int,
             is_maximizing_player: bool,
             is_one_stack_left: bool,
-            alpha=float('-inf'), 
+            alpha=float('-inf'),
             beta=float('inf')
         ) -> Tuple[int, Dict[Tuple[int, int], List[Token]]]:
-        # if depth == 0 or final_stack(board_dict):
-        if depth == 0:
-            return self.heuristic(board_dict, board_size), board_dict
 
         player_color = colors.WHITE if is_maximizing_player else colors.BLACK
+        # if depth == 0 or final_stack(board_dict):
+        if depth == 0:
+            return self.heuristic(board_dict, board_size, player_color), board_dict
+
         best_move = None
         next_positions = self.ai_get_next_positions(board_dict, board_size, player_color, is_one_stack_left)
 
@@ -190,7 +191,6 @@ class AI:
                 if heuristic_value < float('inf'):
                     best_value = heuristic_value
             return best_value, best_move
-        
 
         if is_maximizing_player:
             best_value = float('-inf')
@@ -206,7 +206,7 @@ class AI:
                 next_board = self.ai_move_stack(board_dict, source_tile, token_level, destination_tile)
 
                 if next_position_is_final:
-                    heuristic_value = self.heuristic(next_board, board_size)
+                    heuristic_value = self.heuristic(next_board, board_size, player_color)
                 else:
                     heuristic_value, _ = self.minimax(next_board, board_size, depth - 1, False, is_one_stack_left, alpha, beta)
 
@@ -221,7 +221,7 @@ class AI:
                     break
 
             return best_value, best_move
-        
+
         else:
             best_value = float('inf')
             for next_position in next_positions:
@@ -236,7 +236,7 @@ class AI:
                 next_board = self.ai_move_stack(board_dict, source_tile, token_level, destination_tile)
 
                 if next_position_is_final:
-                    heuristic_value = self.heuristic(next_board, board_size)
+                    heuristic_value = self.heuristic(next_board, board_size, player_color)
                 else:
                     heuristic_value, _ = self.minimax(next_board, board_size, depth - 1, True, is_one_stack_left, alpha, beta)
 
@@ -253,9 +253,10 @@ class AI:
             return best_value, best_move
 
     def heuristic(
-            self, 
+            self,
             board_dict: Dict[Tuple[int, int], List[Token]],
-            board_size: int
+            board_size: int,
+            player_color
         ) -> int:
         score = 0
         white_tokens = 0
@@ -290,13 +291,71 @@ class AI:
             # Check for 8-token stack and add 100 points to the owner
             eight_token_stack_score = 0
             if stack_height == 8:
-                eight_token_stack_score = 100 if stack[-1].color == colors.WHITE else -100                
+                eight_token_stack_score = 100 if stack[-1].color == colors.WHITE else -100
 
-            score += stack_height_score + mobility_score + center_control_score + eight_token_stack_score
+            future_potential_score = self.evaluate_future_potential(board_dict, board_size, tile, stack,
+                                                                        player_color)
 
-        score += white_tokens - black_tokens
-        
+            score += (stack_height_score + mobility_score + center_control_score + eight_token_stack_score
+                      + future_potential_score)
+
+        token_count_score = (white_tokens - black_tokens) * 3
+        token_count_score = token_count_score if player_color == colors.WHITE else -token_count_score
+        score += token_count_score
+
         return score
+        #     score += stack_height_score + mobility_score + center_control_score + eight_token_stack_score
+        #
+        #
+        # score += white_tokens - black_tokens
+        #
+        # return score
+
+    def evaluate_future_potential(self, board_dict, board_size, tile, stack, player_color):
+        future_potential = 0
+        stack_height = len(stack)
+
+        # Consider potential moves that could result in a stack of 8
+        for neighbour_tile in self.get_neighbour_tiles(tile, board_size):
+            neighbour_stack = board_dict.get(neighbour_tile, [])
+            combined_height = stack_height + len(neighbour_stack)
+
+            if combined_height == 8:
+                player_score_increase = self.calculate_score_increase_for_stack_creation(tile, neighbour_tile,
+                                                                                         player_color, board_dict)
+                opponent_color = colors.BLACK if player_color == colors.WHITE else colors.WHITE
+                opponent_score_increase = self.calculate_score_increase_for_stack_creation(tile, neighbour_tile,
+                                                                                           opponent_color, board_dict)
+                future_potential += player_score_increase - opponent_score_increase
+
+        return future_potential
+
+    def calculate_score_increase_for_stack_creation(self, source_tile, destination_tile, player_color, board_dict):
+        source_stack = board_dict.get(source_tile, [])
+        destination_stack = board_dict.get(destination_tile, [])
+
+        # Check if the source stack has enough tokens to contribute to creating an 8-stack
+        for tokens_to_move in range(1, len(source_stack) + 1):
+            potential_new_height = len(destination_stack) + tokens_to_move
+
+            # If the move results in a stack of exactly 8
+            if potential_new_height == 8:
+                # Check if the top token of the resulting stack will be of the player's color
+                if destination_stack and destination_stack[-1].color == player_color:
+                    # Return a positive score if it's beneficial for the player
+                    return 100
+                else:
+                    # Return a negative score if it's beneficial for the opponent
+                    return -100
+
+        # Return 0 if no beneficial move to create an 8-stack is found
+        return 0
+
+    def get_neighbour_tiles(self, tile, board_size):
+        x, y = tile
+        neighbour_offsets = [(-1, -1), (-1, 1), (1, 1), (1, -1)]
+        neighbour_tiles = [(x + dx, y + dy) for dx, dy in neighbour_offsets]
+        return [t for t in neighbour_tiles if 0 <= t[0] < board_size and 0 <= t[1] < board_size]
 
     def is_center(self, tile, board_size):
         center_area = range(board_size // 4, 3 * board_size // 4)
