@@ -85,9 +85,6 @@ class AI:
 
                         neighbour_stack = board_dict[neighbour_tile]
 
-                        # Save which token level will need to be reverted
-                        revert_level = len(neighbour_stack) + 1
-
                         # Check if token would have higher level if moved to destination stack
                         if not neighbour_stack or not is_destination_level_higher_than_current_level(token, neighbour_stack):
                             continue
@@ -99,11 +96,14 @@ class AI:
                         # Save which token level will need to be reverted
                         revert_level = len(neighbour_stack) + 1
 
+                        # Save old token level
+                        old_token_level = token.level
+
                         # Change the state
                         board_dict = self.ai_move_stack(board_dict, tile, token.level, neighbour_tile)
 
                         # Check if the last stack formed
-                        if is_one_stack_left and len(neighbour_stack) + len(stack) - (token.level - 1) == 8:
+                        if is_one_stack_left and len(neighbour_stack) + len(stack) - (old_token_level - 1) == 8:
                             position_status = True
                         else:
                             position_status = False
@@ -182,7 +182,7 @@ class AI:
         next_positions = self.ai_get_next_positions(board_dict, board_size, player_color, is_one_stack_left)
 
         if len(next_positions) == 0:
-            heuristic_value, _ = self.minimax(board_dict, board_size, depth - 1, not is_maximizing_player, is_one_stack_left, alpha, beta)
+            heuristic_value, _ = self.minimax(board_dict, board_size, depth, not is_maximizing_player, is_one_stack_left, alpha, beta)
             if is_maximizing_player:
                 if heuristic_value > float('-inf'):
                     best_value = heuristic_value

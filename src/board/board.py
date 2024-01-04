@@ -78,27 +78,30 @@ class Board:
         #         (2,4): [],
         #         (2,6): [],
         #         (3,1): [],
-        #         (3,3): [
-        #             Token(3,3,colors.WHITE, 80, 20, 1),
-        #             Token(3,3,colors.WHITE, 80, 20, 2),
-        #             Token(3,3,colors.BLACK, 80, 20, 3),
-        #             Token(3,3,colors.WHITE, 80, 20, 4),
-        #             Token(3,3,colors.BLACK, 80, 20, 5),
-        #         ],
+        #         (3,3): [],
         #         (3,5): [],
-        #         (3,7): [],
+        #         (3,7): [
+        #             Token(3,7,colors.WHITE, 80, 15, 1),
+        #             Token(3,7,colors.BLACK, 80, 15, 2),
+                    
+        #         ],
 
         #         (4,0): [],
         #         (4,2): [],
         #         (4,4): [],
-        #         (4,6): [],
+        #         (4,6): [
+        #             Token(4,6,colors.BLACK, 80, 15, 1),
+        #             Token(4,6,colors.WHITE, 80, 15, 2),
+        #             Token(4,6,colors.BLACK, 80, 15, 3),
+        #             Token(4,6,colors.WHITE, 80, 15, 4),
+        #             Token(4,6,colors.BLACK, 80, 15, 5),
+        #         ],
+
         #         (5,1): [],
-        #         (5,3): [],
-        #         (5,5): [
-        #             Token(5,5,colors.WHITE, 80, 20, 1),
-        #             Token(5,5,colors.BLACK, 80, 20, 2),
-        #             Token(5,5,colors.BLACK, 80, 20, 3),
-        #             ],
+        #         (5,3): [
+        #             Token(5,3,colors.WHITE, 80, 15, 1),
+        #         ],
+        #         (5,5): [],
         #         (5,7): [],
 
         #         (6,0): [],
@@ -345,33 +348,6 @@ class Board:
             break
 
         return has_valid_move_from_current_position
-
-    
-
-    # If everything works, delete this method
-    # def can_move(
-    #         self,
-    #         destination_row: int,
-    #         destination_column: int
-    #     ) -> bool:
-    #     """
-    #     !!! SHOULD PROBABLY BE REPLACED WITH is_destination_level_higher_than_current_level FUNCTION IN ITS USE CASESS !!!
-    #     For now, this function is used to check which tiles to highlight as potential destinations
-    #     This function checks only if selected stack can move to destination based on token levels
-    #     In the furure, this function can be used for all movement constrain checks when moving a stack
-    #     """
-    #     selected_row = self.selected_tokens[0].row
-    #     selected_column = self.selected_tokens[0].column
-
-    #     # Checking token level
-    #     lowest_selected_token_level = self.selected_tokens[0].level if self.selected_tokens else 0
-    #     destination_stack = self.board.get((destination_row, destination_column), [])
-    #     highest_destination_token_level = destination_stack[-1].level if destination_stack else 0
-
-    #     if lowest_selected_token_level >= highest_destination_token_level + 1:
-    #         return False
-
-    #     return True
 
     def determine_tile_color(
             self,

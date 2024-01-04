@@ -3,7 +3,6 @@ from typing import Tuple
 
 from display.gui import GUI
 from board.board import Board
-from utils.utils import print_score
 from utils.movement import get_clicked_tile_position
 import utils.colors as colors
 
