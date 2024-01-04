@@ -20,11 +20,12 @@ class Board:
         self.black_points: int = 0
         self.tile_size: int = tile_size
         self.board_size: int = board_size
+        self.max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
         self.selected_tokens: List[Token] = []
         self.board_dark: Tuple[int, int, int] = colors.BROWN
         self.board_light: Tuple[int, int, int] = colors.BEIGE
         self.current_player = current_player
-        self.ai = AI()
+        self.ai = AI(self.max_points)
 
     def change_selected_tokens_status(
             self
@@ -75,32 +76,49 @@ class Board:
 
         #         (2,0): [],
         #         (2,2): [],
-        #         (2,4): [],
-        #         (2,6): [],
-        #         (3,1): [],
-        #         (3,3): [],
-        #         (3,5): [],
-        #         (3,7): [
-        #             Token(3,7,colors.WHITE, 80, 15, 1),
-        #             Token(3,7,colors.BLACK, 80, 15, 2),
-                    
+        #         (2,4): [
+        #             Token(2,4,colors.WHITE, 80, 15, 1),
+        #             Token(2,4,colors.BLACK, 80, 15, 2),
+        #             Token(2,4,colors.BLACK, 80, 15, 3),
+        #             Token(2,4,colors.WHITE, 80, 15, 4),
+        #             Token(2,4,colors.BLACK, 80, 15, 5),
+        #             Token(2,4,colors.WHITE, 80, 15, 6),
         #         ],
+        #         (2,6): [
+        #             Token(2,6,colors.WHITE, 80, 15, 1),
+        #             Token(2,6,colors.BLACK, 80, 15, 2),
+        #             Token(2,6,colors.WHITE, 80, 15, 3),
+        #             Token(2,6,colors.BLACK, 80, 15, 4),
+        #             Token(2,6,colors.BLACK, 80, 15, 5),
+        #         ],
+
+        #         (3,1): [],
+        #         (3,3): [
+        #             Token(3,3,colors.WHITE, 80, 15, 1),
+        #             Token(3,3,colors.WHITE, 80, 15, 2),
+        #             Token(3,3,colors.BLACK, 80, 15, 3),
+        #             Token(3,3,colors.WHITE, 80, 15, 4),
+        #             Token(3,3,colors.BLACK, 80, 15, 5),
+        #             Token(3,3,colors.WHITE, 80, 15, 6),
+        #             Token(3,3,colors.BLACK, 80, 15, 7),
+        #         ],
+        #         (3,5): [],
+        #         (3,7): [],
 
         #         (4,0): [],
         #         (4,2): [],
-        #         (4,4): [],
-        #         (4,6): [
-        #             Token(4,6,colors.BLACK, 80, 15, 1),
-        #             Token(4,6,colors.WHITE, 80, 15, 2),
-        #             Token(4,6,colors.BLACK, 80, 15, 3),
-        #             Token(4,6,colors.WHITE, 80, 15, 4),
-        #             Token(4,6,colors.BLACK, 80, 15, 5),
+        #         (4,4): [
+        #             Token(4,4,colors.BLACK, 80, 15, 1),
+        #             Token(4,4,colors.WHITE, 80, 15, 2),
+        #             Token(4,4,colors.BLACK, 80, 15, 3),
+        #             Token(4,4,colors.WHITE, 80, 15, 4),
+        #             Token(4,4,colors.BLACK, 80, 15, 5),
+        #             Token(4,4,colors.WHITE, 80, 15, 6),
         #         ],
+        #         (4,6): [],
 
         #         (5,1): [],
-        #         (5,3): [
-        #             Token(5,3,colors.WHITE, 80, 15, 1),
-        #         ],
+        #         (5,3): [],
         #         (5,5): [],
         #         (5,7): [],
 
@@ -510,6 +528,8 @@ class Board:
 
         # Make a move
         is_one_stack_left = True if self.get_num_of_remaining_stacks() == 1 else False
+        self.ai.white_points = self.white_points
+        self.ai.black_points = self.black_points
         new_board = self.ai.ai_make_move(self.board, self.board_size, self.current_player, is_one_stack_left)
 
         # If new_board is None, then AI should skip a move
@@ -534,8 +554,7 @@ class Board:
         return is_winning_move
     
     def get_num_of_remaining_stacks(self):
-        max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
-        return max_points - (self.white_points + self.black_points)
+        return self.max_points - (self.white_points + self.black_points)
     
     def get_full_stack_tile(self) -> Tuple[int, int]:
         for tile, stack in self.board.items():
@@ -584,8 +603,7 @@ class Board:
         If no player has won yet, the function prints the current score for both players.
         """
         is_winning_move = False
-        max_points = (self.board_size ** 2 - 2 * self.board_size) // 16
-        winning_point = max_points // 2 + 1
+        winning_point = self.max_points // 2 + 1
         if self.white_points == winning_point or self.black_points == winning_point:
             is_winning_move = True
         return is_winning_move

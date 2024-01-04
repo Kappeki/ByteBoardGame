@@ -1,18 +1,19 @@
 from typing import List, Dict, Tuple
-import copy
 
 import utils.colors as colors
 from board.token import Token
-from utils.utils import final_stack
 from utils.movement import get_potential_moves, has_neighbours, is_destination_level_higher_than_current_level, is_inside_board
 
 
 class AI:
 
     def __init__(
-            self
+            self,
+            max_points
         ) -> None:
-        pass
+        self.white_points = 0
+        self.black_points = 0
+        self.max_points = max_points
 
     def ai_get_next_positions(
             self,
@@ -61,15 +62,40 @@ class AI:
                         
                         # Save which token level will need to be reverted
                         revert_level = len(potential_tile_stack) + 1
+
+                        # Save old token level
+                        old_token_level = token.level
                         
                         # Change the state
                         board_dict = self.ai_move_stack(board_dict, tile, token.level, potential_tile)
 
-                        # Check if it's the last stack
-                        if is_one_stack_left and len(potential_tile_stack) + len(stack) - (token.level - 1) == 8:
-                            position_status = True
-                        else:
-                            position_status = False
+                        # Check if 8-token stack was formed
+                        full_stack_formed = len(potential_tile_stack) + len(stack) - (old_token_level - 1) == 8
+
+                        # Check if the last stack formed
+                        position_status = False
+                        if full_stack_formed:
+                            if is_one_stack_left:
+                                position_status = True
+                            else:
+                                white_formed_stack = board_dict[potential_tile][-1].color == colors.WHITE
+                                black_formed_stack = board_dict[potential_tile][-1].color == colors.BLACK
+                                white_is_about_to_win = self.white_points == (self.max_points // 2)
+                                black_is_about_to_win = self.black_points == (self.max_points // 2)
+                                if (white_formed_stack and white_is_about_to_win) or (black_formed_stack and black_is_about_to_win):
+                                    position_status = True
+                            
+
+                        # if is_one_stack_left and full_stack_formed:
+                        #     position_status = True
+                        # else:
+                        #     # Check if the game is over
+                        #     white_formed_stack = board_dict[potential_tile][-1].color == colors.WHITE
+                        #     black_formed_stack = board_dict[potential_tile][-1].color == colors.BLACK
+                        #     white_is_about_to_win = self.white_points == (self.max_points // 2)
+                        #     black_is_about_to_win = self.black_points == (self.max_points // 2)
+                        #     if full_stack_formed and ((white_formed_stack and white_is_about_to_win) or (black_formed_stack and black_is_about_to_win)):
+                        #         position_status = True
 
                         # Revert the state
                         board_dict = self.ai_move_stack(board_dict, potential_tile, revert_level, tile)
@@ -102,11 +128,33 @@ class AI:
                         # Change the state
                         board_dict = self.ai_move_stack(board_dict, tile, token.level, neighbour_tile)
 
+                        # Check if 8-token stack was formed
+                        full_stack_formed = len(neighbour_stack) + len(stack) - (old_token_level - 1) == 8
+
                         # Check if the last stack formed
-                        if is_one_stack_left and len(neighbour_stack) + len(stack) - (old_token_level - 1) == 8:
-                            position_status = True
-                        else:
-                            position_status = False
+                        position_status = False
+                        if full_stack_formed:
+                            if is_one_stack_left:
+                                position_status = True
+                            else:
+                                white_formed_stack = board_dict[neighbour_tile][-1].color == colors.WHITE
+                                black_formed_stack = board_dict[neighbour_tile][-1].color == colors.BLACK
+                                white_is_about_to_win = self.white_points == (self.max_points // 2)
+                                black_is_about_to_win = self.black_points == (self.max_points // 2)
+                                if (white_formed_stack and white_is_about_to_win) or (black_formed_stack and black_is_about_to_win):
+                                    position_status = True
+
+                        # position_status = False
+                        # if is_one_stack_left and full_stack_formed:
+                        #     position_status = True
+                        # else:
+                        #     # Check if the game is over
+                        #     white_formed_stack = board_dict[neighbour_tile][-1] == colors.WHITE
+                        #     black_formed_stack = board_dict[neighbour_tile][-1] == colors.BLACK
+                        #     white_is_about_to_win = self.white_points == self.max_points // 2
+                        #     black_is_about_to_win = self.black_points == self.max_points // 2
+                        #     if full_stack_formed and ((white_formed_stack and white_is_about_to_win) or (black_formed_stack and black_is_about_to_win)):
+                        #         position_status = True
 
                         # Revert the state
                         board_dict = self.ai_move_stack(board_dict, neighbour_tile, revert_level, tile)
@@ -171,9 +219,9 @@ class AI:
             is_maximizing_player: bool,
             is_one_stack_left: bool,
             alpha=float('-inf'), 
-            beta=float('inf')
+            beta=float('inf'),
+            prev_player_next_positions = 1
         ) -> Tuple[int, Dict[Tuple[int, int], List[Token]]]:
-        # if depth == 0 or final_stack(board_dict):
         if depth == 0:
             return self.heuristic(board_dict, board_size), board_dict
 
@@ -182,7 +230,12 @@ class AI:
         next_positions = self.ai_get_next_positions(board_dict, board_size, player_color, is_one_stack_left)
 
         if len(next_positions) == 0:
-            heuristic_value, _ = self.minimax(board_dict, board_size, depth, not is_maximizing_player, is_one_stack_left, alpha, beta)
+            if prev_player_next_positions == 0 and len(next_positions) == 0:
+                # For preventing infinte loop
+                heuristic_value = self.heuristic(board_dict, board_size)
+            else:
+                # Default algorithm path
+                heuristic_value, _ = self.minimax(board_dict, board_size, depth, not is_maximizing_player, is_one_stack_left, alpha, beta, len(next_positions))
             if is_maximizing_player:
                 if heuristic_value > float('-inf'):
                     best_value = heuristic_value
